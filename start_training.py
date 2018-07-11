@@ -91,7 +91,9 @@ def get_best(history):
 
 def evaluate_best_model(model, q1_test, q2_test, y_test):
     model.load_weights(MODEL_WEIGHTS_FILE)
-    loss, accuracy = model.evaluate([q1_test, q2_test], y_test, verbose=0)
+    scores = model.evaluate([q1_test, q2_test], y_test, verbose=0)
+    loss = scores[1]
+    accuracy = scores[2]
     return loss, accuracy
 
 
