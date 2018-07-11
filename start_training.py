@@ -16,6 +16,7 @@ import gru
 import namespace_utils
 import numpy as np
 import pandas as pd
+import matplotlib
 
 # from keras.wrappers.scikit_learn import KerasClassifier
 # from sklearn.model_selection import cross_val_score
