@@ -32,7 +32,7 @@ def run(FLAGS):
         embeddings = FLAGS.embeddings
         model = FLAGS.model
         maxlen = FLAGS.max_sent_length
-        max_nb_words = FLAGS.max_sent_length
+        max_nb_words = FLAGS.max_nb_words
 
         vocab.prepare_vocab(train_file, embeddings)
 
