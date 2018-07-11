@@ -1,0 +1,9 @@
+venv/
+*.zip
+Quora_question_pair_partition/
+__pycache__/
+*.npy
+*.pickle
+*.h5
+*.tsv
+.idea/
