@@ -5,7 +5,7 @@ import sys
 import datetime
 import time
 
-from keras.callbacks import History, ModelCheckpoint
+from keras.callbacks import History, ModelCheckpoint, EarlyStopping
 from sklearn.model_selection import StratifiedKFold
 
 import vocab
@@ -56,7 +56,8 @@ def run(FLAGS):
         # Start training
         print("Starting training at", datetime.datetime.now())
         t0 = time.time()
-        callbacks = [ModelCheckpoint(MODEL_WEIGHTS_FILE, monitor='val_acc', save_best_only=True)]
+        callbacks = [ModelCheckpoint(MODEL_WEIGHTS_FILE, monitor='val_acc', save_best_only=True),
+                     EarlyStopping(monitor='val_loss', patience=3)]
         history = net.fit([q1_train, q2_train],
                           y_train,
                           validation_data=([q1_dev, q2_dev], y_dev),
