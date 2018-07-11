@@ -2,7 +2,8 @@ from __future__ import print_function
 
 import argparse
 import sys
-from datetime import datetime, time
+import datetime
+import time
 
 from keras.callbacks import History, ModelCheckpoint
 from sklearn.model_selection import StratifiedKFold
