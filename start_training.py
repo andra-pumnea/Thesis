@@ -53,8 +53,8 @@ def run(FLAGS):
             pass
 
         # Start training
-        print("Starting training at", datetime.now())
-        t0 = time()
+        print("Starting training at", datetime.datetime.now())
+        t0 = time.time()
         callbacks = [ModelCheckpoint(MODEL_WEIGHTS_FILE, monitor='val_acc', save_best_only=True)]
         history = net.fit([q1_train, q2_train],
                           y_train,
@@ -64,8 +64,8 @@ def run(FLAGS):
                           shuffle=True,
                           callbacks=callbacks)
 
-        t1 = time()
-        print("Training ended at", datetime.now())
+        t1 = time.time()
+        print("Training ended at", datetime.datetime.now())
         print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
 
         max_val_acc, idx = get_best(history)
