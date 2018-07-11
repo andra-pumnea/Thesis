@@ -72,7 +72,7 @@ def run(FLAGS):
         test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test)
 
         print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
-        print('loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc))
+        print('loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc*100))
 
         plot_acc_curve(history)
 
