@@ -1,9 +1,11 @@
 venv/
 *.zip
 Quora_question_pair_partition/
+snli/
 __pycache__/
 *.npy
 *.pickle
 *.h5
 *.tsv
+.DS_store
 .idea/

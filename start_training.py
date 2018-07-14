@@ -23,67 +23,66 @@ import matplotlib
 
 
 def run(FLAGS):
-    if FLAGS.task == "quora":
-        # quora_full_dataset = FLAGS.full_dataset
-        train_file = FLAGS.train_path
-        dev_file = FLAGS.dev_path
-        test_file = FLAGS.test_path
-        embeddings = FLAGS.embeddings
-        model = FLAGS.model
-        maxlen = FLAGS.max_sent_length
-        max_nb_words = FLAGS.max_nb_words
+    # quora_full_dataset = FLAGS.full_dataset
+    train_file = FLAGS.train_path
+    dev_file = FLAGS.dev_path
+    test_file = FLAGS.test_path
+    embeddings = FLAGS.embeddings
+    model = FLAGS.model
+    maxlen = FLAGS.max_sent_length
+    max_nb_words = FLAGS.max_nb_words
 
-        vocab.prepare_vocab(train_file, embeddings)
+    vocab.prepare_vocab(train_file, embeddings)
 
-        # Prepare datasets
-        q1_train, q2_train, y_train, word_embedding_matrix = preprocessing.prepare_dataset(train_file,
-                                                                                           maxlen,
-                                                                                           max_nb_words, 1)
-        q1_dev, q2_dev, y_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words)
-        q1_test, q2_test, y_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words)
+    # Prepare datasets
+    q1_train, q2_train, y_train, word_embedding_matrix = preprocessing.prepare_dataset(train_file,
+                                                                                       maxlen,
+                                                                                       max_nb_words, 1)
+    q1_dev, q2_dev, y_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words)
+    q1_test, q2_test, y_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words)
 
-        if model == "dec_att":
-            net = dec_att.create_model(word_embedding_matrix, maxlen)
-        elif model == "esim":
-            net = esim.create_model(word_embedding_matrix, maxlen)
-        elif model == "gru":
-            net = gru.create_model(word_embedding_matrix, maxlen)
-        elif model == "bimpm":
-            pass
+    if model == "dec_att":
+        net = dec_att.create_model(word_embedding_matrix, maxlen)
+    elif model == "esim":
+        net = esim.create_model(word_embedding_matrix, maxlen)
+    elif model == "gru":
+        net = gru.create_model(word_embedding_matrix, maxlen)
+    elif model == "bimpm":
+        pass
 
-        filepath = "weights.best.%s.hdf5" % FLAGS.task
+    filepath = "weights.best.%s.hdf5" % FLAGS.task
 
-        # Start training
-        print("Starting training at", datetime.datetime.now())
-        t0 = time.time()
-        callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
-                     EarlyStopping(monitor='val_loss', patience=3)]
-        history = net.fit([q1_train, q2_train],
-                          y_train,
-                          validation_data=([q1_dev, q2_dev], y_dev),
-                          batch_size=FLAGS.batch_size,
-                          nb_epoch=FLAGS.max_epochs,
-                          shuffle=True,
-                          callbacks=callbacks)
+    # Start training
+    print("Starting training at", datetime.datetime.now())
+    t0 = time.time()
+    callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
+                 EarlyStopping(monitor='val_loss', patience=3)]
+    history = net.fit([q1_train, q2_train],
+                      y_train,
+                      validation_data=([q1_dev, q2_dev], y_dev),
+                      batch_size=FLAGS.batch_size,
+                      nb_epoch=FLAGS.max_epochs,
+                      shuffle=True,
+                      callbacks=callbacks)
 
-        t1 = time.time()
-        print("Training ended at", datetime.datetime.now())
-        print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
+    t1 = time.time()
+    print("Training ended at", datetime.datetime.now())
+    print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
 
-        max_val_acc, idx = get_best(history)
-        test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
+    max_val_acc, idx = get_best(history)
+    test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
 
-        print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
-        print('loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc*100))
+    print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
+    print('loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc*100))
 
-        plot_acc_curve(history)
+    plot_acc_curve(history)
 
-        # compute final accuracy on training and test sets
-        # scores = net.evaluate([q1_test, q2_test], y_test)
-        # print("\n%s: %.2f%%" % (net.metrics_names[2], scores[2] * 100))
+    # compute final accuracy on training and test sets
+    # scores = net.evaluate([q1_test, q2_test], y_test)
+    # print("\n%s: %.2f%%" % (net.metrics_names[2], scores[2] * 100))
 
-        # evaluate_model(net, q1_train, q2_train, y_train)
-        # print("%.2f%% (+/- %.2f%%)" % (mean, variance))
+    # evaluate_model(net, q1_train, q2_train, y_train)
+    # print("%.2f%% (+/- %.2f%%)" % (mean, variance))
 
 
 def get_best(history):
@@ -158,7 +157,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=128, help='Number of instances in each batch.')
     parser.add_argument('--max_epochs', type=int, default=1, help='Maximum epochs for training.')
 
-    parser.add_argument('--config_path', type=str, default='quora.config', help='Configuration file.')
+    parser.add_argument('--config_path', type=str, default='snli.config', help='Configuration file.')
 
     args, unparsed = parser.parse_known_args()
     if args.config_path is not None:
