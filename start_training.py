@@ -6,6 +6,7 @@ import datetime
 import time
 
 from keras.callbacks import History, ModelCheckpoint, EarlyStopping
+from keras.utils import to_categorical
 from sklearn.model_selection import StratifiedKFold
 
 import vocab
@@ -40,6 +41,11 @@ def run(FLAGS):
                                                                                        max_nb_words, 1)
     q1_dev, q2_dev, y_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words)
     q1_test, q2_test, y_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words)
+
+    if FLAGS.task == 'snli':
+        y_train= to_categorical(y_train, num_classes=None)
+        y_dev = to_categorical(y_dev, num_classes=None)
+        y_test = to_categorical(y_test, num_classes=None)
 
     if model == "dec_att":
         net = dec_att.create_model(word_embedding_matrix, maxlen)

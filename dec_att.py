@@ -64,11 +64,11 @@ def create_model(pretrained_embedding, maxlen=30,
     dense = BatchNormalization()(dense)
     dense = Dense(dense_dim, activation=activation)(dense)
     dense = Dropout(dense_dropout)(dense)
-    out_ = Dense(1, activation='sigmoid')(dense)
+    out_ = Dense(3, activation='sigmoid')(dense)
 
     model = Model(inputs=[q1, q2], outputs=out_)
-    model.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
-                  metrics=['binary_crossentropy', 'accuracy'])
+    model.compile(optimizer=Adam(lr=lr), loss='categorical_crossentropy',
+                  metrics=['categorical_crossentropy', 'accuracy'])
     return model
 
 
