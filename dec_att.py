@@ -5,6 +5,7 @@ from keras.optimizers import Adam
 import preprocessing
 import model_utils
 
+
 # https://www.kaggle.com/lamdang/dl-models
 def create_model(pretrained_embedding, maxlen=30,
         projection_dim=300, projection_hidden=0, projection_dropout=0.2,
