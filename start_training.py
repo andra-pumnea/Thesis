@@ -56,7 +56,8 @@ def run(FLAGS):
     elif model == "bimpm":
         pass
 
-    filepath = "weights.best.%s.hdf5" % FLAGS.task
+    filepath = "weights.best.%s.%s.hdf5" % (FLAGS.task, model)
+    print(filepath)
 
     # Start training
     print("Starting training at", datetime.datetime.now())
@@ -81,7 +82,7 @@ def run(FLAGS):
     print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
     print('loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc*100))
 
-    plot_acc_curve(history)
+    # plot_acc_curve(history)
 
     # compute final accuracy on training and test sets
     # scores = net.evaluate([q1_test, q2_test], y_test)
