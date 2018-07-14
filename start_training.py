@@ -21,8 +21,6 @@ import matplotlib
 # from keras.wrappers.scikit_learn import KerasClassifier
 # from sklearn.model_selection import cross_val_score
 
-MODEL_WEIGHTS_FILE = 'question_pairs_weights.h5'
-
 
 def run(FLAGS):
     if FLAGS.task == "quora":
@@ -53,10 +51,12 @@ def run(FLAGS):
         elif model == "bimpm":
             pass
 
+        filepath = "weights.best.%s.hdf5" % FLAGS.task
+
         # Start training
         print("Starting training at", datetime.datetime.now())
         t0 = time.time()
-        callbacks = [ModelCheckpoint(MODEL_WEIGHTS_FILE, monitor='val_acc', save_best_only=True),
+        callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
                      EarlyStopping(monitor='val_loss', patience=3)]
         history = net.fit([q1_train, q2_train],
                           y_train,
@@ -71,7 +71,7 @@ def run(FLAGS):
         print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
 
         max_val_acc, idx = get_best(history)
-        test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test)
+        test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
 
         print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
         print('loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc*100))
@@ -91,8 +91,8 @@ def get_best(history):
     return max_val_acc, idx
 
 
-def evaluate_best_model(model, q1_test, q2_test, y_test):
-    model.load_weights(MODEL_WEIGHTS_FILE)
+def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
+    model.load_weights(filepath)
     scores = model.evaluate([q1_test, q2_test], y_test, verbose=0)
     loss = scores[1]
     accuracy = scores[2]
