@@ -34,7 +34,7 @@ def run(FLAGS):
     maxlen = FLAGS.max_sent_length
     max_nb_words = FLAGS.max_nb_words
 
-    vocab.prepare_vocab(train_file, embeddings)
+    word_index = vocab.prepare_vocab(train_file, embeddings)
 
     # Prepare datasets
     q1_train, q2_train, y_train, word_embedding_matrix = preprocessing.prepare_dataset(train_file,
@@ -86,7 +86,9 @@ def run(FLAGS):
     print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc*100, test_f1))
 
     get_confusion_matrix(net, q1_test, q2_test,y_test)
-    get_misclassified_q(net, q1_test, q2_test, y_test)
+
+    misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index)
+    write_misclassified(misclassified)
 
     # plot_acc_curve(history)
 
@@ -113,26 +115,39 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
 
 
 def get_confusion_matrix(model, q1_test, q2_test, y_test):
+
     y_pred = model.predict([q1_test, q2_test])
     y_pred = (y_pred > 0.5)
+
+    print("Confusion matrix:")
     print(confusion_matrix(y_test, y_pred))
 
     target_names = ['non_duplicate', 'duplicate']
     print(classification_report(y_test, y_pred, target_names=target_names))
 
 
-def get_misclassified_q(model, q1_test, q2_test ,y_test):
-    y_pred = model.predict()
+def get_misclassified_q(model, q1_test, q2_test ,y_test, word_index):
+    y_pred = model.predict([q1_test, q2_test])
     y_pred = (y_pred > 0.5)
     misclassified_idx = np.where(y_test != y_pred)
     misclassified_q = []
 
     print(misclassified_idx)
     for i in misclassified_idx:
-        qq = [q1_test[i], q2_test[i], y_test[i], y_pred[i]]
-        misclassified_q.append(qq)
+        q1_reverse = dict(map(q1_test[i], word_index.items()))
+        q2_reverse = dict(map(q2_test[i], word_index.items()))
+        misclassified_q.append(q1_reverse, q2_reverse, y_test, y_pred)
+    print(misclassified_q)
+    return misclassified_q
 
-    print(qq)
+
+def write_misclassified(misclassified_q):
+    output_file = "misclassified.%s.%s.hdf5" % (FLAGS.task, FLAGS.model)
+    with open(output_file, 'w+') as f:
+        for pair in misclassified_q:
+            f.writelines(str(pair[0]) + '\t' + str(pair[1]) + '\t' + str(pair[2]) + '\t' + str(pair[3]) + '\n')
+    print("Finished writing misclassified questions")
+
 
 def plot_acc_curve(history):
     acc = pd.DataFrame({'epoch': [i + 1 for i in history.epoch],

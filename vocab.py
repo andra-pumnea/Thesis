@@ -57,10 +57,46 @@ def get_glove_embeddings(embeddings):
 
 def prepare_vocab(file, embeddings):
     q1, q2, is_duplicate = read_full_dataset(file)
-    save_tokenizer(q1, q2)
+    word_index = save_tokenizer(q1, q2)
 
     # download embeddings
     if embeddings == "glove":
         get_glove_embeddings(embeddings)
 
     print("Finished reading full dataset")
+
+    return word_index
+
+
+# def get_misclassified_q(misclassified_q, word2idx):
+#     idx2word = []
+#     for i, pair in enumerate(misclassified_q):
+#         q_pair = []
+#         for idx,q in enumerate(pair):
+#             q_words = []
+#             if idx != 2 and idx != 3:
+#                 for w in q:
+#                     word = [key for key, value in word2idx.items() if value == w][0]
+#                     q_words.append(word)
+#                 q_pair.append(q_words)
+#             else :
+#                 q_pair.append(q)
+#         idx2word.append(q_pair)
+#     return idx2word
+#
+#
+# def write_misclassified_q(misclassified_q, output_file):
+#     if output_file:
+#         with open(output_file, 'w+') as f:
+#             f.write('New Epoch---------------------------\n')
+#             for pair in misclassified_q:
+#                 f.writelines(str(pair[0])+'\t'+ str(pair[1]) +'\t'+ str(pair[2]) +'\t'+ str(pair[3])+'\n')
+#
+#
+# misclassified_q = []
+#     i = 0
+#     for l_true, l_pred in zip(dataset.get_data_item('y'), all_plabels):
+#         if l_true != l_pred:
+#             qq = [dataset.get_data_item('q1')[i],dataset.get_data_item('q2')[i], l_true, l_pred]
+#             misclassified_q.append(qq)
+#             i +=1
