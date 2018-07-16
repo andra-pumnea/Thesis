@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import matplotlib
 
+
 # from keras.wrappers.scikit_learn import KerasClassifier
 # from sklearn.model_selection import cross_val_score
 
@@ -44,7 +45,7 @@ def run(FLAGS):
     q1_test, q2_test, y_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words)
 
     if FLAGS.task == 'snli':
-        y_train= to_categorical(y_train, num_classes=None)
+        y_train = to_categorical(y_train, num_classes=None)
         y_dev = to_categorical(y_dev, num_classes=None)
         y_test = to_categorical(y_test, num_classes=None)
 
@@ -83,9 +84,9 @@ def run(FLAGS):
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
 
     print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
-    print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc*100, test_f1))
+    print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc * 100, test_f1))
 
-    get_confusion_matrix(net, q1_test, q2_test,y_test)
+    get_confusion_matrix(net, q1_test, q2_test, y_test)
 
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index)
     write_misclassified(misclassified)
@@ -115,7 +116,6 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
 
 
 def get_confusion_matrix(model, q1_test, q2_test, y_test):
-
     y_pred = model.predict([q1_test, q2_test])
     y_pred = (y_pred > 0.5)
 
@@ -126,18 +126,29 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test):
     print(classification_report(y_test, y_pred, target_names=target_names))
 
 
-def get_misclassified_q(model, q1_test, q2_test ,y_test, word_index):
+def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
     y_pred = model.predict([q1_test, q2_test])
     y_pred = (y_pred > 0.5)
     misclassified_idx = np.where(y_test != y_pred)
-    misclassified_q = []
-
     print(misclassified_idx)
+
+    reverse_word_map = dict(map(reversed, word_index.items()))
+
+    misclassified_q = []
     for i in misclassified_idx:
-        q1_reverse = dict(map(q1_test[i], word_index.items()))
-        q2_reverse = dict(map(q2_test[i], word_index.items()))
-        misclassified_q.append(q1_reverse, q2_reverse, y_test, y_pred)
-    print(misclassified_q)
+        words = []
+        pair = [q1_test[i], q2_test[i]]
+        q_pair = []
+        for idx, q in enumerate(pair):
+            words = []
+            for w in q:
+                if w != 0:
+                    word = reverse_word_map.get(w)
+                    words.append(word)
+            q_pair.append((' '.join(words)))
+        q_pair.append(y_test[i])
+        q_pair.append(y_pred[i])
+        misclassified_q.append(q_pair)
     return misclassified_q
 
 
