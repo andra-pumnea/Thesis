@@ -55,7 +55,7 @@ def create_model(pretrained_embedding,
     # out_ = Dense(1, activation='sigmoid')(dense)
 
     model = Model(inputs=[q1, q2], outputs=out_)
-    model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy', metrics=['binary_crossentropy', 'accuracy'])
+    model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy', metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     return model
 
 

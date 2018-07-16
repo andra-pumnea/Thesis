@@ -77,10 +77,10 @@ def run(FLAGS):
     print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
 
     max_val_acc, idx = get_best(history)
-    test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
+    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
 
     print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
-    print('loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc*100))
+    print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc*100, test_f1))
 
     # plot_acc_curve(history)
 
@@ -102,7 +102,8 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
     scores = model.evaluate([q1_test, q2_test], y_test, verbose=0)
     loss = scores[1]
     accuracy = scores[2]
-    return loss, accuracy
+    f1_score = scores[3]
+    return loss, accuracy, f1_score
 
 
 def plot_acc_curve(history):

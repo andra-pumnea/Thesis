@@ -69,7 +69,7 @@ def create_model(pretrained_embedding, maxlen=30,
 
     model = Model(inputs=[q1, q2], outputs=out_)
     model.compile(optimizer=Adam(lr=lr), loss='categorical_crossentropy',
-                  metrics=['categorical_crossentropy', 'accuracy'])
+                  metrics=['categorical_crossentropy', 'accuracy', model_utils.f1])
     return model
 
 

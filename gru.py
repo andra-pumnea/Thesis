@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+import model_utils
 import preprocessing
 from keras.models import Model
 from keras.layers import Input, Embedding, GRU, Lambda, Dense
@@ -49,7 +51,7 @@ def create_model(word_embedding_matrix, maxlen=30):
     # Adadelta optimizer, with gradient clipping by norm
     optimizer = Adam(lr=0.001)
 
-    net.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['mean_squared_error','accuracy'])
+    net.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['mean_squared_error', 'accuracy', model_utils.f1])
 
     net.summary()
     return net
