@@ -86,13 +86,13 @@ def run(FLAGS):
         t1 = time.time()
         print("Training ended at", datetime.datetime.now())
         print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
+
+        max_val_acc, idx = get_best(history)
+        print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
     else:
         print("------------Unknown mode------------")
 
-    max_val_acc, idx = get_best(history)
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
-
-    print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
     print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc * 100, test_f1))
 
     get_confusion_matrix(net, q1_test, q2_test, y_test)
