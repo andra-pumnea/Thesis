@@ -85,7 +85,8 @@ def run(FLAGS):
     print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
     print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc*100, test_f1))
 
-    get_confusion_matrix(net, y_test)
+    get_confusion_matrix(net, q1_test, q2_test,y_test)
+    get_misclassified_q(net, q1_test, q2_test, y_test)
 
     # plot_acc_curve(history)
 
@@ -111,14 +112,27 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
     return loss, accuracy, f1_score
 
 
-def get_confusion_matrix(model, y_test):
-    y_pred = model.predict()
+def get_confusion_matrix(model, q1_test, q2_test, y_test):
+    y_pred = model.predict([q1_test, q2_test])
     y_pred = (y_pred > 0.5)
     print(confusion_matrix(y_test, y_pred))
 
     target_names = ['non_duplicate', 'duplicate']
     print(classification_report(y_test, y_pred, target_names=target_names))
 
+
+def get_misclassified_q(model, q1_test, q2_test ,y_test):
+    y_pred = model.predict()
+    y_pred = (y_pred > 0.5)
+    misclassified_idx = np.where(y_test != y_pred)
+    misclassified_q = []
+
+    print(misclassified_idx)
+    for i in misclassified_idx:
+        qq = [q1_test[i], q2_test[i], y_test[i], y_pred[i]]
+        misclassified_q.append(qq)
+
+    print(qq)
 
 def plot_acc_curve(history):
     acc = pd.DataFrame({'epoch': [i + 1 for i in history.epoch],
