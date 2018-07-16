@@ -7,6 +7,7 @@ import time
 
 from keras.callbacks import History, ModelCheckpoint, EarlyStopping
 from keras.utils import to_categorical
+from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import StratifiedKFold
 
 import vocab
@@ -76,11 +77,15 @@ def run(FLAGS):
     print("Training ended at", datetime.datetime.now())
     print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
 
+    net.summary()
+
     max_val_acc, idx = get_best(history)
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
 
     print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
     print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc*100, test_f1))
+
+    get_confusion_matrix(net, y_test)
 
     # plot_acc_curve(history)
 
@@ -104,6 +109,15 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
     accuracy = scores[2]
     f1_score = scores[3]
     return loss, accuracy, f1_score
+
+
+def get_confusion_matrix(model, y_test):
+    y_pred = model.predict()
+    y_pred = (y_pred > 0.5)
+    print(confusion_matrix(y_test, y_pred))
+
+    target_names = ['non_duplicate', 'duplicate']
+    print(classification_report(y_test, y_pred, target_names=target_names))
 
 
 def plot_acc_curve(history):

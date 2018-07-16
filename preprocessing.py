@@ -196,3 +196,5 @@ def get_shape(shapes):
 
 def compute_accuracy(predictions, labels):
     return np.mean(np.equal(predictions.ravel() < 0.5, labels))
+
+
