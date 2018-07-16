@@ -67,7 +67,7 @@ def run(FLAGS):
     if mode == "load":
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
-        model.compile(optimizer=Adam(lr=1e-3), loss='categorical_crossentropy',
+        net.compile(optimizer=Adam(lr=1e-3), loss='categorical_crossentropy',
                       metrics=['categorical_crossentropy', 'accuracy', model_utils.f1])
     elif mode == "training":
         # Start training
