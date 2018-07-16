@@ -68,7 +68,7 @@ def create_model(pretrained_embedding, maxlen=30,
     # out_ = Dense(1, activation='sigmoid')(dense)
 
     model = Model(inputs=[q1, q2], outputs=out_)
-    model.compile(optimizer=Adagrad(lr=lr), loss='categorical_crossentropy',
+    model.compile(optimizer=Adam(lr=lr), loss='categorical_crossentropy',
                   metrics=['categorical_crossentropy', 'accuracy'])
     return model
 
