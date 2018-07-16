@@ -65,6 +65,7 @@ def run(FLAGS):
     filepath = "weights.best.%s.%s.hdf5" % (FLAGS.task, model)
 
     if mode == "load":
+        print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
         model.compile(optimizer=Adam(lr=1e-3), loss='categorical_crossentropy',
                       metrics=['categorical_crossentropy', 'accuracy', model_utils.f1])
