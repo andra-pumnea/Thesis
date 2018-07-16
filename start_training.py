@@ -6,10 +6,12 @@ import datetime
 import time
 
 from keras.callbacks import History, ModelCheckpoint, EarlyStopping
+from keras.optimizers import Adam
 from keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import StratifiedKFold
 
+import model_utils
 import vocab
 import preprocessing
 import dec_att
@@ -32,6 +34,7 @@ def run(FLAGS):
     test_file = FLAGS.test_path
     embeddings = FLAGS.embeddings
     model = FLAGS.model
+    mode = FLAGS.mode
     maxlen = FLAGS.max_sent_length
     max_nb_words = FLAGS.max_nb_words
 
@@ -58,27 +61,32 @@ def run(FLAGS):
     elif model == "bimpm":
         pass
 
-    filepath = "weights.best.%s.%s.hdf5" % (FLAGS.task, model)
-    print(filepath)
-
-    # Start training
-    print("Starting training at", datetime.datetime.now())
-    t0 = time.time()
-    callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
-                 EarlyStopping(monitor='val_loss', patience=3)]
-    history = net.fit([q1_train, q2_train],
-                      y_train,
-                      validation_data=([q1_dev, q2_dev], y_dev),
-                      batch_size=FLAGS.batch_size,
-                      nb_epoch=FLAGS.max_epochs,
-                      shuffle=True,
-                      callbacks=callbacks)
-
-    t1 = time.time()
-    print("Training ended at", datetime.datetime.now())
-    print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
-
     net.summary()
+    filepath = "weights.best.%s.%s.hdf5" % (FLAGS.task, model)
+
+    if mode == "load":
+        net.load_weights(filepath)
+        model.compile(optimizer=Adam(lr=1e-3), loss='categorical_crossentropy',
+                      metrics=['categorical_crossentropy', 'accuracy', model_utils.f1])
+    elif mode == "training":
+        # Start training
+        print("Starting training at", datetime.datetime.now())
+        t0 = time.time()
+        callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
+                     EarlyStopping(monitor='val_loss', patience=3)]
+        history = net.fit([q1_train, q2_train],
+                          y_train,
+                          validation_data=([q1_dev, q2_dev], y_dev),
+                          batch_size=FLAGS.batch_size,
+                          nb_epoch=FLAGS.max_epochs,
+                          shuffle=True,
+                          callbacks=callbacks)
+
+        t1 = time.time()
+        print("Training ended at", datetime.datetime.now())
+        print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
+    else:
+        print("------------Unknown mode------------")
 
     max_val_acc, idx = get_best(history)
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
@@ -136,7 +144,6 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
 
     misclassified_q = []
     for i in misclassified_idx:
-        words = []
         pair = [q1_test[i], q2_test[i]]
         q_pair = []
         for idx, q in enumerate(pair):
@@ -211,6 +218,7 @@ if __name__ == "__main__":
     parser.add_argument('--embeddings', type=str, help='Path the to pre-trained word vector model.')
     parser.add_argument('--task', type=str, help='Dataset to be used.')
     parser.add_argument('--model', type=str, help='DL model run.')
+    parser.add_argument('--mode', type=str, default='training', help='Mode to run the programme in.')
 
     parser.add_argument('--max_nb_words', type=int, default=80000, help='Maximum words in vocab.')
     parser.add_argument('--max_sent_length', type=int, default=30, help='Maximum words per sentence.')

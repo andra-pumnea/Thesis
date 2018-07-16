@@ -8,10 +8,10 @@ import model_utils
 
 # https://www.kaggle.com/lamdang/dl-models
 def create_model(pretrained_embedding, maxlen=30,
-        projection_dim=300, projection_hidden=0, projection_dropout=0.2,
-        compare_dim=500, compare_dropout=0.2,
-        dense_dim=300, dense_dropout=0.2,
-        lr=1e-3, activation='elu'):
+                 projection_dim=300, projection_hidden=0, projection_dropout=0.2,
+                 compare_dim=500, compare_dropout=0.2,
+                 dense_dim=300, dense_dropout=0.2,
+                 lr=1e-3, activation='elu'):
     # Based on: https://arxiv.org/abs/1606.01933
 
     q1 = Input(name='q1', shape=(maxlen,))

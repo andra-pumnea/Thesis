@@ -13,7 +13,7 @@ history = History()
 n_hidden = 250
 
 
-def create_model(word_embedding_matrix, maxlen=30):
+def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
     # The visible layer
     question1 = Input(shape=(maxlen,))
     question2 = Input(shape=(maxlen,))
@@ -48,10 +48,8 @@ def create_model(word_embedding_matrix, maxlen=30):
     # Pack it all up into a model
     net = Model([question1, question2], [output])
 
-    # Adadelta optimizer, with gradient clipping by norm
-    optimizer = Adam(lr=0.001)
-
-    net.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['mean_squared_error', 'accuracy', model_utils.f1])
+    net.compile(optimizer=Adam(lr=lr), loss='categorical_crossentropy',
+                metrics=['categorical_crossentropy', 'accuracy', model_utils.f1])
 
     net.summary()
     return net

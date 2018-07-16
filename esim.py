@@ -5,12 +5,13 @@ from keras.optimizers import Adam
 import preprocessing
 import model_utils
 
+
 # https://www.kaggle.com/lamdang/dl-models
 def create_model(pretrained_embedding,
-         maxlen=30,
-         lstm_dim=300,
-         dense_dim=300,
-         dense_dropout=0.5):
+                 maxlen=30,
+                 lstm_dim=300,
+                 dense_dim=300,
+                 dense_dropout=0.5):
     # Based on arXiv:1609.06038
     q1 = Input(name='q1', shape=(maxlen,))
     q2 = Input(name='q2', shape=(maxlen,))
@@ -55,7 +56,8 @@ def create_model(pretrained_embedding,
     # out_ = Dense(1, activation='sigmoid')(dense)
 
     model = Model(inputs=[q1, q2], outputs=out_)
-    model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy', metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
+    model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+                  metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     return model
 
 
