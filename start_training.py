@@ -147,7 +147,6 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
 
     misclassified_idx = np.where(y_test != y_pred)
     misclassified_idx = misclassified_idx[0].tolist()
-    print(misclassified_idx)
 
     reverse_word_map = dict(map(reversed, word_index.items()))
 
@@ -172,6 +171,7 @@ def write_misclassified(misclassified_q):
     output_file = "misclassified.%s.%s.hdf5" % (FLAGS.task, FLAGS.model)
     with open(output_file, 'w+') as f:
         for pair in misclassified_q:
+            print(pair)
             f.writelines(str(pair[0]) + '\t' + str(pair[1]) + '\t' + str(pair[2]) + '\t' + str(pair[3]) + '\n')
     print("Finished writing misclassified questions")
 
