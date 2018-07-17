@@ -61,7 +61,6 @@ def run(FLAGS):
     elif model == "bimpm":
         pass
 
-    net.summary()
     filepath = "weights.best.%s.%s.hdf5" % (FLAGS.task, model)
 
     if mode == "load":
@@ -125,11 +124,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
 
 
 def get_confusion_matrix(model, q1_test, q2_test, y_test):
-    y_pred = model.predict([q1_test, q2_test])
-    y_pred = (y_pred > 0.5)
-
-    y_pred = y_pred.flatten()
-    y_pred.astype(int)
+    y_pred = get_predictions(model, q1_test, q2_test)
 
     print("Confusion matrix:")
     print(confusion_matrix(y_test, y_pred))
@@ -139,11 +134,7 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test):
 
 
 def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
-    y_pred = model.predict([q1_test, q2_test])
-    y_pred = (y_pred > 0.5)
-
-    y_pred = y_pred.flatten()
-    y_pred = y_pred.astype(int)
+    y_pred = get_predictions(model, q1_test, q2_test)
 
     misclassified_idx = np.where(y_test != y_pred)
     misclassified_idx = misclassified_idx[0].tolist()
@@ -167,8 +158,17 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
     return misclassified_q
 
 
+def get_predictions(model, q1_test, q2_test):
+    y_pred = model.predict([q1_test, q2_test])
+    y_pred = (y_pred > 0.5)
+    y_pred = y_pred.flatten()
+    y_pred = y_pred.astype(int)
+    
+    return y_pred
+
+
 def write_misclassified(misclassified_q):
-    output_file = "misclassified.%s.%s.tsv" % (FLAGS.task, FLAGS.model)
+    output_file = "errors/misclassified.%s.%s.tsv" % (FLAGS.task, FLAGS.model)
     with open(output_file, 'w+') as f:
         for pair in misclassified_q:
             f.writelines(str(pair[0]) + '\t' + str(pair[1]) + '\t' + str(pair[2]) + '\t' + str(pair[3]) + '\n')
