@@ -160,7 +160,7 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
                 if w != 0:
                     word = reverse_word_map.get(w)
                     words.append(word)
-            q_pair.append((' '.join(words)))
+            q_pair.append((' '.join(words).encode('utf-8').strip()))
         q_pair.append(y_test[i])
         q_pair.append(y_pred[i])
         misclassified_q.append(q_pair)
