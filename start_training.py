@@ -67,8 +67,8 @@ def run(FLAGS):
     if mode == "load":
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
-        net.compile(optimizer=Adam(lr=1e-3), loss='categorical_crossentropy',
-                      metrics=['categorical_crossentropy', 'accuracy', model_utils.f1])
+        net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+                      metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     elif mode == "training":
         # Start training
         print("Starting training at", datetime.datetime.now())
@@ -128,6 +128,9 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test):
     y_pred = model.predict([q1_test, q2_test])
     y_pred = (y_pred > 0.5)
 
+    y_pred = y_pred.flatten()
+    y_pred.astype(int)
+
     print("Confusion matrix:")
     print(confusion_matrix(y_test, y_pred))
 
@@ -138,7 +141,12 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test):
 def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
     y_pred = model.predict([q1_test, q2_test])
     y_pred = (y_pred > 0.5)
+
+    y_pred = y_pred.flatten()
+    y_pred.astype(int)
+
     misclassified_idx = np.where(y_test != y_pred)
+    misclassified_idx = misclassified_idx[0].tolist()
     print(misclassified_idx)
 
     reverse_word_map = dict(map(reversed, word_index.items()))
