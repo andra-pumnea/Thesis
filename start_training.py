@@ -61,7 +61,7 @@ def run(FLAGS):
     elif model == "bimpm":
         pass
 
-    filepath = "weights.best.%s.%s.hdf5" % (FLAGS.task, model)
+    filepath = "models/weights.best.%s.%s.hdf5" % (FLAGS.task, model)
 
     if mode == "load":
         print("Loading weights from %s" % filepath)
@@ -163,7 +163,7 @@ def get_predictions(model, q1_test, q2_test):
     y_pred = (y_pred > 0.5)
     y_pred = y_pred.flatten()
     y_pred = y_pred.astype(int)
-    
+
     return y_pred
 
 

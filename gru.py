@@ -48,8 +48,8 @@ def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
     # Pack it all up into a model
     net = Model([question1, question2], [output])
 
-    net.compile(optimizer=Adam(lr=lr), loss='categorical_crossentropy',
-                metrics=['categorical_crossentropy', 'accuracy', model_utils.f1])
+    net.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
+                metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
 
     net.summary()
     return net

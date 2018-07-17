@@ -52,8 +52,8 @@ def create_model(pretrained_embedding,
     dense = Dense(dense_dim, activation='elu')(dense)
     dense = BatchNormalization()(dense)
     dense = Dropout(dense_dropout)(dense)
-    out_ = Dense(3, activation='sigmoid')(dense)
-    # out_ = Dense(1, activation='sigmoid')(dense)
+    # out_ = Dense(3, activation='sigmoid')(dense)
+    out_ = Dense(1, activation='sigmoid')(dense)
 
     model = Model(inputs=[q1, q2], outputs=out_)
     model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
