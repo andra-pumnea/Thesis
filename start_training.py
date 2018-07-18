@@ -242,7 +242,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=128, help='Number of instances in each batch.')
     parser.add_argument('--max_epochs', type=int, default=1, help='Maximum epochs for training.')
 
-    parser.add_argument('--config_path', type=str, default='snli.config', help='Configuration file.')
+    parser.add_argument('--config_path', type=str, default='quora.config', help='Configuration file.')
 
     args, unparsed = parser.parse_known_args()
     if args.config_path is not None:
