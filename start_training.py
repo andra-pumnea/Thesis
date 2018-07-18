@@ -38,6 +38,7 @@ def run(FLAGS):
     mode = FLAGS.mode
     maxlen = FLAGS.max_sent_length
     max_nb_words = FLAGS.max_nb_words
+    experiment = FLAGS.experiment
 
     word_index = vocab.prepare_vocab(train_file, embeddings)
 
@@ -62,7 +63,7 @@ def run(FLAGS):
     elif model == "bimpm":
         pass
 
-    filepath = "models/weights.best.%s.%s.hdf5" % (FLAGS.task, model)
+    filepath = "models/weights.best.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment)
 
     if mode == "load":
         print("Loading weights from %s" % filepath)
@@ -83,7 +84,7 @@ def run(FLAGS):
                           shuffle=True,
                           callbacks=callbacks)
 
-        pickle_file = "saved_history/history.%s.%s.pickle" % (FLAGS.task, model)
+        pickle_file = "saved_history/history.%s.%s.%s.pickle" % (FLAGS.task, model, experiment)
         with open(pickle_file, 'wb') as handle:
             pickle.dump(history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -175,7 +176,7 @@ def get_predictions(model, q1_test, q2_test):
 
 
 def write_misclassified(misclassified_q):
-    output_file = "errors/misclassified.%s.%s.tsv" % (FLAGS.task, FLAGS.model)
+    output_file = "errors/misclassified.%s.%s.%s.tsv" % (FLAGS.task, FLAGS.model, FLAGS.experiment)
     with open(output_file, 'w+') as f:
         for pair in misclassified_q:
             f.writelines(str(pair[0]) + '\t' + str(pair[1]) + '\t' + str(pair[2]) + '\t' + str(pair[3]) + '\n')
