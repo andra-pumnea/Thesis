@@ -138,9 +138,8 @@ def pad_sentences(question1_word_sequences, question2_word_sequences, is_duplica
     return q1_data, q2_data, labels
 
 
-def init_embeddings(w_index, max_nb_words):
-    cache_filename = 'snli.min.cache.npy'
-    # cache_filename = 'quora.min.cache.npy'
+def init_embeddings(w_index, max_nb_words, task):
+    cache_filename = "%s.min.cache.npy'" % task
 
     if exists(cache_filename):
         word_embedding_matrix = np.load(cache_filename)
@@ -153,7 +152,7 @@ def init_embeddings(w_index, max_nb_words):
     return word_embedding_matrix
 
 
-def prepare_dataset(filename, maxlen, max_nb_words, train=0,):
+def prepare_dataset(filename, maxlen, max_nb_words, train=0, task='quora'):
     question1, question2, is_duplicate = read_dataset(filename)
     question1_word_sequences, question2_word_sequences, w_index = tokenize_data(question1, question2)
     q1_data, q2_data, labels = pad_sentences(question1_word_sequences, question2_word_sequences,
@@ -166,7 +165,7 @@ def prepare_dataset(filename, maxlen, max_nb_words, train=0,):
     Q2 = X[:, 1]
 
     if train == 1:
-        word_embedding_matrix = init_embeddings(w_index, max_nb_words)
+        word_embedding_matrix = init_embeddings(w_index, max_nb_words, task)
         return Q1, Q2, y, word_embedding_matrix
     else:
         return Q1, Q2, y

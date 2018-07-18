@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import argparse
+import pickle
 import sys
 import datetime
 import time
@@ -82,6 +83,10 @@ def run(FLAGS):
                           shuffle=True,
                           callbacks=callbacks)
 
+        pickle_file = "saved_history/history.%s.%s.pickle" % (FLAGS.task, model)
+        with open(pickle_file, 'wb') as handle:
+            pickle.dump(history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
         t1 = time.time()
         print("Training ended at", datetime.datetime.now())
         print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
@@ -120,6 +125,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
     loss = scores[1]
     accuracy = scores[2]
     f1_score = scores[3]
+    print(scores)
     return loss, accuracy, f1_score
 
 
@@ -129,6 +135,7 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test):
     print("Confusion matrix:")
     print(confusion_matrix(y_test, y_pred))
 
+    print("Classification report:")
     target_names = ['non_duplicate', 'duplicate']
     print(classification_report(y_test, y_pred, target_names=target_names))
 
