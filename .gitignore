@@ -1,5 +1,4 @@
 venv/
-*.zip
 Quora_question_pair_partition/
 snli/
 __pycache__/
@@ -9,3 +8,5 @@ __pycache__/
 *.tsv
 .DS_store
 .idea/
+*.hdf5
+*.pickle

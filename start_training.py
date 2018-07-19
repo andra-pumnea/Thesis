@@ -86,7 +86,7 @@ def run(FLAGS):
 
         pickle_file = "saved_history/history.%s.%s.%s.pickle" % (FLAGS.task, model, experiment)
         with open(pickle_file, 'wb') as handle:
-            pickle.dump(history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         t1 = time.time()
         print("Training ended at", datetime.datetime.now())
