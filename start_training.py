@@ -45,7 +45,9 @@ def run(FLAGS):
     # Prepare datasets
     q1_train, q2_train, y_train, word_embedding_matrix = preprocessing.prepare_dataset(train_file,
                                                                                        maxlen,
-                                                                                       max_nb_words, 1)
+                                                                                       max_nb_words,
+                                                                                       experiment,
+                                                                                       1)
     q1_dev, q2_dev, y_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words)
     q1_test, q2_test, y_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words)
 
