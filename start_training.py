@@ -39,6 +39,8 @@ def run(FLAGS):
     maxlen = FLAGS.max_sent_length
     max_nb_words = FLAGS.max_nb_words
     experiment = FLAGS.experiment
+    dataset = FLAGS.task
+    init_embeddings = 1
 
     word_index = vocab.prepare_vocab(train_file, embeddings)
 
@@ -47,11 +49,12 @@ def run(FLAGS):
                                                                                        maxlen,
                                                                                        max_nb_words,
                                                                                        experiment,
-                                                                                       1)
+                                                                                       dataset,
+                                                                                       init_embeddings)
     q1_dev, q2_dev, y_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment)
     q1_test, q2_test, y_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment)
 
-    if FLAGS.task == 'snli':
+    if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
         y_dev = to_categorical(y_dev, num_classes=None)
         y_test = to_categorical(y_test, num_classes=None)

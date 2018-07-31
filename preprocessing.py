@@ -152,7 +152,7 @@ def init_embeddings(w_index, max_nb_words, task, experiment):
     return word_embedding_matrix
 
 
-def prepare_dataset(filename, maxlen, max_nb_words, experiment, train=0, task='quora'):
+def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, train=0):
     question1, question2, is_duplicate = read_dataset(filename)
     question1_word_sequences, question2_word_sequences, w_index = tokenize_data(question1, question2)
     q1_data, q2_data, labels = pad_sentences(question1_word_sequences, question2_word_sequences,
