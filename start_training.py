@@ -69,7 +69,7 @@ def run(FLAGS):
         pass
 
     filepath = "models/weights.best.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment)
-
+    #filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
     if mode == "load":
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)

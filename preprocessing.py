@@ -140,6 +140,7 @@ def pad_sentences(question1_word_sequences, question2_word_sequences, is_duplica
 
 def init_embeddings(w_index, max_nb_words, task, experiment):
     cache_filename = "%s.%s.min.cache.npy" % (task, experiment)
+    #cache_filename = "quora.training_full.min.cache.npy"
 
     if exists(cache_filename):
         word_embedding_matrix = np.load(cache_filename)
