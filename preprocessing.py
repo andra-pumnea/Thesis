@@ -75,8 +75,8 @@ def read_dataset(file):
     with open(file, encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
         for row in reader:
-            question1.append(row[1])
-            question2.append(row[2])
+            question1.append(text_to_wordlist(row[1]))
+            question2.append(text_to_wordlist(row[2]))
             is_duplicate.append(row[0])
     print('Question pairs from %s: %d' % (file, len(question1)))
 
