@@ -45,14 +45,14 @@ def run(FLAGS):
     word_index = vocab.prepare_vocab(train_file, embeddings)
 
     # Prepare datasets
-    q1_train, q2_train, y_train, word_embedding_matrix = preprocessing.prepare_dataset(train_file,
+    q1_train, q2_train, y_train, word_embedding_matrix, q1len_t, q2len_t, q1words_t, q2words_t = preprocessing.prepare_dataset(train_file,
                                                                                        maxlen,
                                                                                        max_nb_words,
                                                                                        experiment,
                                                                                        dataset,
                                                                                        init_embeddings)
-    q1_dev, q2_dev, y_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment, dataset)
-    q1_test, q2_test, y_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset)
+    q1_dev, q2_dev, y_dev, q1len_d, q2len_d, q1words_d, q2words_d = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment, dataset)
+    q1_test, q2_test, y_test, _, _, _, _ = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset)
 
     if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
@@ -81,9 +81,9 @@ def run(FLAGS):
         t0 = time.time()
         callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
                      EarlyStopping(monitor='val_loss', patience=3)]
-        history = net.fit([q1_train, q2_train],
+        history = net.fit([q1_train, q2_train, q1len_t, q2len_t, q1words_t, q2words_t],
                           y_train,
-                          validation_data=([q1_dev, q2_dev], y_dev),
+                          validation_data=([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d], y_dev),
                           batch_size=FLAGS.batch_size,
                           nb_epoch=FLAGS.max_epochs,
                           shuffle=True,

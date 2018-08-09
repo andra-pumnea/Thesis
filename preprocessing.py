@@ -159,6 +159,8 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, train=0):
     q1_data, q2_data, labels = pad_sentences(question1_word_sequences, question2_word_sequences,
                                              is_duplicate, maxlen)
 
+    q1len, q2len, q1words, q2words = create_features(question1, question2)
+
     X = np.stack((q1_data, q2_data), axis=1)
     y = labels
 
@@ -167,9 +169,38 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, train=0):
 
     if train == 1:
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment)
-        return Q1, Q2, y, word_embedding_matrix
+        return Q1, Q2, y, word_embedding_matrix, q1len, q2len, q1words, q2words
     else:
-        return Q1, Q2, y
+        return Q1, Q2, y, q1len, q2len, q1words, q2words
+
+
+def question_len(question1, question2):
+    q1len = []
+    q2len = []
+
+    for q1, q2 in zip(question1, question2):
+        q1, q2 = str(q1), str(q2)
+        q1len.append(len(q1))
+        q2len.append(len(q2))
+    return np.array(q1len), np.array(q2len)
+
+
+def question_words(question1, question2):
+    q1words = []
+    q2words = []
+
+    for q1, q2 in zip(question1, question2):
+        words_q1, words_q2 = str(q1).split(), str(q2).split()
+        q1words.append(len(words_q1))
+        q2words.append(len(words_q2))
+
+    return np.array(q1words), np.array(q2words)
+
+
+def create_features(question1, question2):
+    q1len, q2len = question_len(question1, question2)
+    q1words, q2words = question_words(question1, question2)
+    return q1len, q2len, q1words, q2words
 
 
 def euclidean_distance(vecs):
