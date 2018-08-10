@@ -107,7 +107,7 @@ def run(FLAGS):
 
     get_confusion_matrix(net, q1_test, q2_test, y_test, q1len_tt, q2len_tt, q1words_tt, q2words_tt )
 
-    misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index)
+    misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, q1len_tt, q2len_tt, q1words_tt, q2words_tt)
     write_misclassified(misclassified)
 
     # plot_acc_curve(history)
@@ -146,8 +146,8 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test, q1len, q2len, q1words,
     print(classification_report(y_test, y_pred, target_names=target_names))
 
 
-def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
-    y_pred = get_predictions(model, q1_test, q2_test)
+def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, q1len, q2len, q1words, q2words):
+    y_pred = get_predictions(model, q1_test, q2_test, q1len, q2len, q1words, q2words)
 
     misclassified_idx = np.where(y_test != y_pred)
     misclassified_idx = misclassified_idx[0].tolist()
