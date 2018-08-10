@@ -52,7 +52,7 @@ def run(FLAGS):
                                                                                        dataset,
                                                                                        init_embeddings)
     q1_dev, q2_dev, y_dev, q1len_d, q2len_d, q1words_d, q2words_d = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment, dataset)
-    q1_test, q2_test, y_test, _, _, _, _ = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset)
+    q1_test, q2_test, y_test, q1len_tt, q2len_tt, q1words_tt, q2words_tt = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset)
 
     if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
@@ -102,7 +102,7 @@ def run(FLAGS):
     else:
         print("------------Unknown mode------------")
 
-    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath)
+    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, q1len_tt, q2len_tt, q1words_tt, q2words_tt)
     print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc * 100, test_f1))
 
     get_confusion_matrix(net, q1_test, q2_test, y_test)
@@ -125,9 +125,9 @@ def get_best(history):
     return max_val_acc, idx
 
 
-def evaluate_best_model(model, q1_test, q2_test, y_test, filepath):
+def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, q1len, q2len, q1words, q2words):
     model.load_weights(filepath)
-    scores = model.evaluate([q1_test, q2_test], y_test, verbose=0)
+    scores = model.evaluate([q1_test, q2_test, q1len, q2len, q1words, q2words], y_test, verbose=0)
     loss = scores[1]
     accuracy = scores[2]
     f1_score = scores[3]
