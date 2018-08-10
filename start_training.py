@@ -105,7 +105,7 @@ def run(FLAGS):
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, q1len_tt, q2len_tt, q1words_tt, q2words_tt)
     print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc * 100, test_f1))
 
-    get_confusion_matrix(net, q1_test, q2_test, y_test)
+    get_confusion_matrix(net, q1_test, q2_test, y_test, q1len_tt, q2len_tt, q1words_tt, q2words_tt )
 
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index)
     write_misclassified(misclassified)
@@ -135,8 +135,8 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, q1len, q2len,
     return loss, accuracy, f1_score
 
 
-def get_confusion_matrix(model, q1_test, q2_test, y_test):
-    y_pred = get_predictions(model, q1_test, q2_test)
+def get_confusion_matrix(model, q1_test, q2_test, y_test, q1len, q2len, q1words, q2words):
+    y_pred = get_predictions(model, q1_test, q2_test, q1len, q2len, q1words, q2words)
 
     print("Confusion matrix:")
     print(confusion_matrix(y_test, y_pred))
@@ -171,8 +171,8 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index):
     return misclassified_q
 
 
-def get_predictions(model, q1_test, q2_test):
-    y_pred = model.predict([q1_test, q2_test])
+def get_predictions(model, q1_test, q2_test, q1len, q2len, q1words, q2words):
+    y_pred = model.predict([q1_test, q2_test, q1len, q2len, q1words, q2words])
     y_pred = (y_pred > 0.5)
     y_pred = y_pred.flatten()
     y_pred = y_pred.astype(int)
