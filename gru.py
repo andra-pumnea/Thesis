@@ -41,7 +41,7 @@ def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
     distance = Lambda(preprocessing.exponent_neg_manhattan_distance, output_shape=preprocessing.get_shape)(
         [output_q1, output_q2])
 
-    output = concatenate([encoded_q1,output_q1, output_q2])
+    output = concatenate([output_q1, output_q2, distance])
     output = Dense(1, activation='relu')(output)
     output = BatchNormalization()(output)
 
