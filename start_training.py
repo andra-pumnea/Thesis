@@ -15,9 +15,9 @@ from sklearn.model_selection import StratifiedKFold
 import model_utils
 import vocab
 import preprocessing
-import dec_att
-import esim
-import gru
+import dec_att, dec_att_features
+import esim, esim_features
+import gru, gru_features
 import namespace_utils
 import numpy as np
 import pandas as pd
@@ -40,35 +40,40 @@ def run(FLAGS):
     max_nb_words = FLAGS.max_nb_words
     experiment = FLAGS.experiment
     dataset = FLAGS.task
+    features = FLAGS.features
     init_embeddings = 1
 
     word_index = vocab.prepare_vocab(train_file, embeddings)
 
     # Prepare datasets
-    q1_train, q2_train, y_train, word_embedding_matrix, q1len_t, q2len_t, q1words_t, q2words_t = preprocessing.prepare_dataset(train_file,
+    q1_train, q2_train, y_train, word_embedding_matrix, features_train = preprocessing.prepare_dataset(train_file,
                                                                                        maxlen,
                                                                                        max_nb_words,
                                                                                        experiment,
                                                                                        dataset,
                                                                                        init_embeddings)
-    q1_dev, q2_dev, y_dev, q1len_d, q2len_d, q1words_d, q2words_d = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment, dataset)
-    q1_test, q2_test, y_test, q1len_tt, q2len_tt, q1words_tt, q2words_tt = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset)
+    q1_dev, q2_dev, y_dev, features_dev= preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment, dataset)
+    q1_test, q2_test, y_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset)
 
     if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
         y_dev = to_categorical(y_dev, num_classes=None)
         y_test = to_categorical(y_test, num_classes=None)
 
-    if model == "dec_att":
+    if model == "dec_att" and features == 'features':
+        net = dec_att_features.create_model(word_embedding_matrix, maxlen)
+    elif model == "dec_att" and features != 'features':
         net = dec_att.create_model(word_embedding_matrix, maxlen)
-    elif model == "esim":
+    elif model == "esim" and features == 'features':
+        net = esim_features.create_model(word_embedding_matrix, maxlen)
+    elif model == "esim" and features != 'features':
         net = esim.create_model(word_embedding_matrix, maxlen)
-    elif model == "gru":
+    elif model == "gru" and features == 'features':
+        net = gru_features.create_model(word_embedding_matrix, maxlen)
+    elif model == "gru" and features != 'features':
         net = gru.create_model(word_embedding_matrix, maxlen)
-    elif model == "bimpm":
-        pass
 
-    filepath = "models/weights.best.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment)
+    filepath = "models/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, features)
     #filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
     if mode == "load":
         print("Loading weights from %s" % filepath)
@@ -81,15 +86,26 @@ def run(FLAGS):
         t0 = time.time()
         callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
                      EarlyStopping(monitor='val_loss', patience=3)]
-        history = net.fit([q1_train, q2_train, q1len_t, q2len_t, q1words_t, q2words_t],
-                          y_train,
-                          validation_data=([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d], y_dev),
-                          batch_size=FLAGS.batch_size,
-                          nb_epoch=FLAGS.max_epochs,
-                          shuffle=True,
-                          callbacks=callbacks)
+        if not features_train and not features_dev:
+            history = net.fit([q1_train, q2_train],
+                              y_train,
+                              validation_data=([q1_dev, q2_dev], y_dev),
+                              batch_size=FLAGS.batch_size,
+                              nb_epoch=FLAGS.max_epochs,
+                              shuffle=True,
+                              callbacks=callbacks)
+        else:
+            q1len_t, q2len_t, q1words_t, q2words_t = [x for x in features_train]
+            q1len_d, q2len_d, q1words_d, q2words_d = [x for x in features_dev]
+            history = net.fit([q1_train, q2_train, q1len_t, q2len_t, q1words_t, q2words_t],
+                              y_train,
+                              validation_data=([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d], y_dev),
+                              batch_size=FLAGS.batch_size,
+                              nb_epoch=FLAGS.max_epochs,
+                              shuffle=True,
+                              callbacks=callbacks)
 
-        pickle_file = "saved_history/history.%s.%s.%s.pickle" % (FLAGS.task, model, experiment)
+        pickle_file = "saved_history/history.%s.%s.%s.%s.pickle" % (FLAGS.task, model, experiment, features)
         with open(pickle_file, 'wb') as handle:
             pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -102,12 +118,12 @@ def run(FLAGS):
     else:
         print("------------Unknown mode------------")
 
-    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, q1len_tt, q2len_tt, q1words_tt, q2words_tt)
+    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, features_test)
     print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc * 100, test_f1))
 
-    get_confusion_matrix(net, q1_test, q2_test, y_test, q1len_tt, q2len_tt, q1words_tt, q2words_tt )
+    get_confusion_matrix(net, q1_test, q2_test, y_test, features_test)
 
-    misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, q1len_tt, q2len_tt, q1words_tt, q2words_tt)
+    misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
     # plot_acc_curve(history)
@@ -125,9 +141,14 @@ def get_best(history):
     return max_val_acc, idx
 
 
-def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, q1len, q2len, q1words, q2words):
+def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, features):
     model.load_weights(filepath)
-    scores = model.evaluate([q1_test, q2_test, q1len, q2len, q1words, q2words], y_test, verbose=0)
+
+    if not features:
+        scores = model.evaluate([q1_test, q2_test], y_test, verbose=0)
+    else:
+        q1len, q2len, q1words, q2words = [x for x in features]
+        scores = model.evaluate([q1_test, q2_test, q1len, q2len, q1words, q2words], y_test, verbose=0)
     loss = scores[1]
     accuracy = scores[2]
     f1_score = scores[3]
@@ -135,8 +156,8 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, q1len, q2len,
     return loss, accuracy, f1_score
 
 
-def get_confusion_matrix(model, q1_test, q2_test, y_test, q1len, q2len, q1words, q2words):
-    y_pred = get_predictions(model, q1_test, q2_test, q1len, q2len, q1words, q2words)
+def get_confusion_matrix(model, q1_test, q2_test, y_test, features):
+    y_pred = get_predictions(model, q1_test, q2_test, features)
 
     print("Confusion matrix:")
     print(confusion_matrix(y_test, y_pred))
@@ -146,8 +167,8 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test, q1len, q2len, q1words,
     print(classification_report(y_test, y_pred, target_names=target_names))
 
 
-def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, q1len, q2len, q1words, q2words):
-    y_pred = get_predictions(model, q1_test, q2_test, q1len, q2len, q1words, q2words)
+def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, features):
+    y_pred = get_predictions(model, q1_test, q2_test, features)
 
     misclassified_idx = np.where(y_test != y_pred)
     misclassified_idx = misclassified_idx[0].tolist()
@@ -171,8 +192,12 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, q1len, q2le
     return misclassified_q
 
 
-def get_predictions(model, q1_test, q2_test, q1len, q2len, q1words, q2words):
-    y_pred = model.predict([q1_test, q2_test, q1len, q2len, q1words, q2words])
+def get_predictions(model, q1_test, q2_test, features):
+    if not features:
+        y_pred = model.predict([q1_test, q2_test])
+    else:
+        q1len, q2len, q1words, q2words = [x for x in features]
+        y_pred = model.predict([q1_test, q2_test, q1len, q2len, q1words, q2words])
     y_pred = (y_pred > 0.5)
     y_pred = y_pred.flatten()
     y_pred = y_pred.astype(int)
@@ -181,7 +206,7 @@ def get_predictions(model, q1_test, q2_test, q1len, q2len, q1words, q2words):
 
 
 def write_misclassified(misclassified_q):
-    output_file = "errors/misclassified.%s.%s.%s.tsv" % (FLAGS.task, FLAGS.model, FLAGS.experiment)
+    output_file = "errors/misclassified.%s.%s.%s.%s.tsv" % (FLAGS.task, FLAGS.model, FLAGS.experiment, FLAGS.features)
     with open(output_file, 'w+') as f:
         for pair in misclassified_q:
             f.writelines(str(pair[0]) + '\t' + str(pair[1]) + '\t' + str(pair[2]) + '\t' + str(pair[3]) + '\n')

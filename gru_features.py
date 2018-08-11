@@ -17,6 +17,10 @@ def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
     # The visible layer
     question1 = Input(shape=(maxlen,))
     question2 = Input(shape=(maxlen,))
+    q_len1 = Input(shape=(1,), dtype='float32')
+    q_len2 = Input(shape=(1,), dtype='float32')
+    word_len1 = Input(shape=(1,), dtype='float32')
+    word_len2 = Input(shape=(1,), dtype='float32')
 
     print(word_embedding_matrix.shape)
     in_dim, out_dim = word_embedding_matrix.shape
@@ -41,10 +45,15 @@ def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
     distance = Lambda(preprocessing.exponent_neg_manhattan_distance, output_shape=preprocessing.get_shape)(
         [output_q1, output_q2])
 
-    output = Dense(1, activation='sigmoid')(distance)
+    output = Dense(300, activation='sigmoid')(distance)
+    output = concatenate([output, q_len1, q_len2, word_len1, word_len2])
+    output = BatchNormalization()(output)
+    output = Dense(300, activation='relu')(output)
+    output = Dropout(0.2)(output)
+    output = Dense(1, activation='sigmoid')(output)
 
     # Pack it all up into a model
-    net = Model([question1, question2], [output])
+    net = Model([question1, question2, q_len1, q_len2, word_len1, word_len2], [output])
 
     net.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
                 metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
