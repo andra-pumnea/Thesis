@@ -50,10 +50,10 @@ def run(FLAGS):
                                                                                        maxlen,
                                                                                        max_nb_words,
                                                                                        experiment,
-                                                                                       dataset,
+                                                                                       dataset, features,
                                                                                        init_embeddings)
-    q1_dev, q2_dev, y_dev, features_dev= preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment, dataset)
-    q1_test, q2_test, y_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset)
+    q1_dev, q2_dev, y_dev, features_dev= preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment, dataset, features)
+    q1_test, q2_test, y_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset, features)
 
     if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
