@@ -63,18 +63,7 @@ def run(FLAGS):
         y_dev = to_categorical(y_dev, num_classes=None)
         y_test = to_categorical(y_test, num_classes=None)
 
-    if model == "dec_att" and features == 'features':
-        net = dec_att_features.create_model(word_embedding_matrix, maxlen)
-    elif model == "dec_att" and features != 'features':
-        net = dec_att.create_model(word_embedding_matrix, maxlen)
-    elif model == "esim" and features == 'features':
-        net = esim_features.create_model(word_embedding_matrix, maxlen)
-    elif model == "esim" and features != 'features':
-        net = esim.create_model(word_embedding_matrix, maxlen)
-    elif model == "gru" and features == 'features':
-        net = gru_features.create_model(word_embedding_matrix, maxlen)
-    elif model == "gru" and features != 'features':
-        net = gru.create_model(word_embedding_matrix, maxlen)
+    net = create_model(word_embedding_matrix)
 
     filepath = "models/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, features)
     # filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
@@ -129,9 +118,29 @@ def run(FLAGS):
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
-    mean, variance = evaluate_model(net, q1_train, q2_train, y_train, features_train, q1_test, q2_test, y_test,
+    mean, variance = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train, q1_test, q2_test, y_test,
                                     features_test, features)
     print("Model cross-val: %.2f%% (+/- %.2f%%)" % (mean, variance))
+
+
+def create_model(word_embedding_matrix):
+    model = FLAGS.model
+    features = FLAGS.features
+    maxlen = FLAGS.max_sent_length
+
+    if model == "dec_att" and features == 'features':
+        net = dec_att_features.create_model(word_embedding_matrix, maxlen)
+    elif model == "dec_att" and features != 'features':
+        net = dec_att.create_model(word_embedding_matrix, maxlen)
+    elif model == "esim" and features == 'features':
+        net = esim_features.create_model(word_embedding_matrix, maxlen)
+    elif model == "esim" and features != 'features':
+        net = esim.create_model(word_embedding_matrix, maxlen)
+    elif model == "gru" and features == 'features':
+        net = gru_features.create_model(word_embedding_matrix, maxlen)
+    elif model == "gru" and features != 'features':
+        net = gru.create_model(word_embedding_matrix, maxlen)
+    return net
 
 
 def get_best(history):
@@ -220,7 +229,7 @@ def plot_acc_curve(history):
     ax.set_ylim([0.0, 1.0]);
 
 
-def evaluate_model(net, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, features_dev, feat):
+def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, features_dev, feat):
     # define 10-fold cross validation test harness
     seed = 7
     kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
@@ -231,6 +240,7 @@ def evaluate_model(net, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, featur
                  EarlyStopping(monitor='val_loss', patience=3)]
 
     for train, test in kfold.split(q1, y):
+        net = create_model(word_embedding_matrix)
         if not features_train:
             net.fit([q1[train], q2[train]], y[train],
                     validation_data=([q1[test], q2[test]], y[test]),
