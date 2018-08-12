@@ -222,9 +222,16 @@ def evaluate_model(net, q1, q2, y, features):
     kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
     cvscores = []
 
+    filepath = "cross_vall/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, FLAGS.model, FLAGS.experiment, features)
+    callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
+                 EarlyStopping(monitor='val_loss', patience=3)]
+
     for train, test in kfold.split(q1, y):
         if not features:
-            net.fit([q1[train], q2[train]], y[train], epochs=2, batch_size=64, verbose=0)
+            net.fit([q1[train], q2[train]], y[train], batch_size=FLAGS.batch_size,
+                                                      nb_epoch=FLAGS.max_epochs,
+                                                      shuffle=True,
+                                                      callbacks=callbacks)
             # evaluate the model
             scores = net.evaluate([q1[test], q2[test]], y[test], verbose=0)
         else:
