@@ -118,6 +118,7 @@ def run(FLAGS):
 
     cvscores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
                               q1_test, q2_test, y_test,features_test, features)
+    print("Finished running %s model on %s with %s" % (model, experiment, features))
     print_crossval(cvscores)
     print("Crossvalidation result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, features_test)
