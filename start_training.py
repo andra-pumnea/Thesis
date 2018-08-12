@@ -111,17 +111,17 @@ def run(FLAGS):
     else:
         print("------------Unknown mode------------")
 
-    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, features_test)
-    print('loss = {0:.4f}, accuracy = {1:.4f}, f1-score = {0:.4f}'.format(test_loss, test_acc * 100, test_f1))
-
     get_confusion_matrix(net, q1_test, q2_test, y_test, features_test)
 
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
-    mean, variance = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train, q1_test, q2_test, y_test,
-                                    features_test, features)
-    print("Model cross-val: %.2f%% (+/- %.2f%%)" % (mean, variance))
+    cvscores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
+                              q1_test, q2_test, y_test,features_test, features)
+    print_crossval(cvscores)
+    print("Crossvalidation result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
+    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, features_test)
+    print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 
 
 def create_model(word_embedding_matrix):
@@ -142,6 +142,11 @@ def create_model(word_embedding_matrix):
     elif model == "gru" and features != 'features':
         net = gru.create_model(word_embedding_matrix, maxlen)
     return net
+
+
+def print_crossval(cvscores):
+    for idx, val in enumerate(cvscores):
+        print('Fold%d: acc %.2f%%' % (idx, val))
 
 
 def get_best(history):
@@ -257,14 +262,15 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
                     callbacks=callbacks)
 
             # evaluate the model
-            net.load_weights(filepath)
+            # net.load_weights(filepath)
             scores = net.evaluate([q1_dev, q2_dev], y_dev, verbose=0)
             print(scores)
         else:
             q1len, q2len, q1words, q2words = [x for x in features_train]
             q1len_d, q2len_d, q1words_d, q2words_d = [x for x in features_dev]
             net.fit([q1[train], q2[train], q1len[train], q2len[train], q1words[train], q2words[train]],
-                    y[train], validation_data=([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]], y[test]),
+                    y[train], validation_data=(
+                [q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]], y[test]),
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
                     shuffle=True,
@@ -273,9 +279,9 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
             scores = net.evaluate([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d],
                                   y_dev, verbose=0)
             print(scores)
-        cvscores.append(scores[2]*100)
+        cvscores.append(scores[2] * 100)
         i += 1
-    return np.mean(cvscores), np.std(cvscores)
+    return cvscores
 
 
 def enrich_options(options):
