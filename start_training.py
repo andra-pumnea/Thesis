@@ -47,13 +47,16 @@ def run(FLAGS):
 
     # Prepare datasets
     q1_train, q2_train, y_train, word_embedding_matrix, features_train = preprocessing.prepare_dataset(train_file,
-                                                                                       maxlen,
-                                                                                       max_nb_words,
-                                                                                       experiment,
-                                                                                       dataset, features,
-                                                                                       init_embeddings)
-    q1_dev, q2_dev, y_dev, features_dev= preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment, dataset, features)
-    q1_test, q2_test, y_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment, dataset, features)
+                                                                                                       maxlen,
+                                                                                                       max_nb_words,
+                                                                                                       experiment,
+                                                                                                       dataset,
+                                                                                                       features,
+                                                                                                       init_embeddings)
+    q1_dev, q2_dev, y_dev, features_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
+                                                                        dataset, features)
+    q1_test, q2_test, y_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment,
+                                                                            dataset, features)
 
     if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
@@ -74,12 +77,12 @@ def run(FLAGS):
         net = gru.create_model(word_embedding_matrix, maxlen)
 
     filepath = "models/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, features)
-    #filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
+    # filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
     if mode == "load":
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
         net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
-                      metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
+                    metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     elif mode == "training":
         # Start training
         print("Starting training at", datetime.datetime.now())
@@ -216,32 +219,40 @@ def plot_acc_curve(history):
     ax.set_ylim([0.0, 1.0]);
 
 
-def evaluate_model(net, q1, q2, y, features):
+def evaluate_model(net, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, features_dev, feat):
     # define 10-fold cross validation test harness
     seed = 7
     kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
     cvscores = []
 
-    filepath = "cross_vall/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, FLAGS.model, FLAGS.experiment, features)
+    filepath = "cross_vall/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, FLAGS.model, FLAGS.experiment, feat)
     callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
                  EarlyStopping(monitor='val_loss', patience=3)]
 
     for train, test in kfold.split(q1, y):
-        if not features:
-            net.fit([q1[train], q2[train]], y[train], batch_size=FLAGS.batch_size,
-                                                      nb_epoch=FLAGS.max_epochs,
-                                                      shuffle=True,
-                                                      callbacks=callbacks)
+        if not features_train:
+            net.fit([q1[train], q2[train]], y[train],
+                    validation_data=([q1[test], q2[test]], y[test]),
+                    batch_size=FLAGS.batch_size,
+                    nb_epoch=FLAGS.max_epochs,
+                    shuffle=True,
+                    callbacks=callbacks)
+
             # evaluate the model
-            scores = net.evaluate([q1[test], q2[test]], y[test], verbose=0)
+            scores = net.evaluate([q1_dev, q2_dev], y_dev, verbose=0)
             print(scores)
         else:
-            q1len, q2len, q1words, q2words = [x for x in features]
+            q1len, q2len, q1words, q2words = [x for x in features_train]
+            q1len_d, q2len_d, q1words_d, q2words_d = [x for x in features_dev]
             net.fit([q1[train], q2[train], q1len[train], q2len[train], q1words[train], q2words[train]],
-                    y[train], epochs=2, batch_size=64, verbose=0)
+                    y[train], validation_data=([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]], y[test]),
+                    batch_size=FLAGS.batch_size,
+                    nb_epoch=FLAGS.max_epochs,
+                    shuffle=True,
+                    callbacks=callbacks)
             # evaluate the model
-            scores = net.evaluate([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]],
-                                  y[test], verbose=0)
+            scores = net.evaluate([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d],
+                                  y_dev, verbose=0)
             print(scores)
         cvscores.append(scores[2])
     return np.mean(cvscores), np.std(cvscores)
