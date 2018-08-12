@@ -165,7 +165,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, features):
     loss = scores[1]
     accuracy = scores[2]
     f1_score = scores[3]
-    print(scores)
+    # print(scores)
     return loss, accuracy, f1_score
 
 
@@ -247,7 +247,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
     kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
     cvscores = []
 
-    i = 0
+    i = 1
     for train, test in kfold.split(q1, y):
         filepath = "cross_vall/fold%d.best.%s.%s.%s.%s.hdf5" % (i, FLAGS.task, FLAGS.model, FLAGS.experiment, feat)
         callbacks = get_callbacks(filepath)
@@ -255,7 +255,6 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
 
         if not features_train:
             net.fit([q1[train], q2[train]], y[train],
-                    validation_data=([q1[test], q2[test]], y[test]),
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
                     shuffle=True,
@@ -263,21 +262,20 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
 
             # evaluate the model
             # net.load_weights(filepath)
-            scores = net.evaluate([q1_dev, q2_dev], y_dev, verbose=0)
+            scores = net.evaluate([q1[test], q2[test]], y[test], verbose=0)
             print(scores)
         else:
             q1len, q2len, q1words, q2words = [x for x in features_train]
             q1len_d, q2len_d, q1words_d, q2words_d = [x for x in features_dev]
             net.fit([q1[train], q2[train], q1len[train], q2len[train], q1words[train], q2words[train]],
-                    y[train], validation_data=(
-                [q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]], y[test]),
+                    y[train], 
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
                     shuffle=True,
                     callbacks=callbacks)
             # evaluate the model
-            scores = net.evaluate([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d],
-                                  y_dev, verbose=0)
+            scores = net.evaluate([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]],
+                                  y[test], verbose=0)
             print(scores)
         cvscores.append(scores[2] * 100)
         i += 1
