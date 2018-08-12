@@ -126,14 +126,8 @@ def run(FLAGS):
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
-    # plot_acc_curve(history)
-
-    # compute final accuracy on training and test sets
-    # scores = net.evaluate([q1_test, q2_test], y_test)
-    # print("\n%s: %.2f%%" % (net.metrics_names[2], scores[2] * 100))
-
-    # evaluate_model(net, q1_train, q2_train, y_train)
-    # print("%.2f%% (+/- %.2f%%)" % (mean, variance))
+    mean, variance = evaluate_model(net, q1_train, q2_train, y_train)
+    print("Model cross-val: %.2f%% (+/- %.2f%%)" % (mean, variance))
 
 
 def get_best(history):
@@ -222,28 +216,25 @@ def plot_acc_curve(history):
     ax.set_ylim([0.0, 1.0]);
 
 
-def evaluate_model(net, q1_train, q2_train, y_train):
+def evaluate_model(net, q1, q2, y, features):
     # define 10-fold cross validation test harness
     seed = 7
     kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
     cvscores = []
-    X = zip(q1_train, q2_train)
 
-    for train, test in kfold.split(X, y_train):
-        # # Start training
-        # net.fit([q1_train, q2_train], y_train,
-        #         validation_data=([q1_dev, q2_dev], y_dev),
-        #         batch_size=FLAGS.batch_size, nb_epoch=FLAGS.max_epochs, shuffle=True, )
-
-        # # compute final accuracy on training and test sets
-        # scores = net.evaluate([q1_test, q2_test], y_test)
-        # print("\n%s: %.2f%%" % (net.metrics_names[2], scores[2] * 100))
-
-        net.fit(X[train], y_train[train], epochs=2, batch_size=64, verbose=0)
-        # evaluate the model
-        scores = net.evaluate(X[test], y_train[test], verbose=0)
-        print("%s: %.2f%%" % (net.metrics_names[1], scores[1] * 100))
-        cvscores.append(scores[1] * 100)
+    for train, test in kfold.split(q1, y):
+        if not features:
+            net.fit([q1[train], q2[train]], y[train], epochs=2, batch_size=64, verbose=0)
+            # evaluate the model
+            scores = net.evaluate([q1[test], q2[test]], y[test], verbose=0)
+        else:
+            q1len, q2len, q1words, q2words = [x for x in features]
+            net.fit([q1[train], q2[train], q1len[train], q2len[train], q1words[train], q2words[train]],
+                    y[train], epochs=2, batch_size=64, verbose=0)
+            # evaluate the model
+            scores = net.evaluate([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]],
+                                  y[test], verbose=0)
+        cvscores.append(scores[1])
     return np.mean(cvscores), np.std(cvscores)
 
 
