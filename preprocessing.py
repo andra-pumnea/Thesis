@@ -6,7 +6,6 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras import backend as K
 import csv
-
 import pickle
 from nltk.corpus import stopwords
 import re
@@ -16,7 +15,7 @@ GLOVE_FILE = 'glove.840B.300d.txt'
 QUESTION_PAIRS_FILE = 'quora_duplicate_questions.tsv'
 
 EMBEDDING_DIM = 300
-
+stops = set(stopwords.words("english"))
 
 def text_to_wordlist(text, remove_stopwords=False):
     # Clean the text, with the option to remove stopwords and to stem words.
@@ -199,10 +198,31 @@ def question_words(question1, question2):
     return np.array(q1words), np.array(q2words)
 
 
+def word_match_share(question1, question2):
+    word_overlap = []
+    for q1, q2 in zip(question1, question2):
+        q1words = {}
+        q2words = {}
+        for word in str(q1).lower().split():
+            if word not in stops:
+                q1words[word] = 1
+        for word in str(q2).lower().split():
+            if word not in stops:
+                q2words[word] = 1
+        if len(q1words) == 0 or len(q2words) == 0:
+            return 0
+        shared_words_in_q1 = [w for w in q1words.keys() if w in q2words]
+        shared_words_in_q2 = [w for w in q2words.keys() if w in q1words]
+        R = (len(shared_words_in_q1) + len(shared_words_in_q2))/(len(q1words) + len(q2words))
+        word_overlap.append(round(R,2))
+    return word_overlap
+
+
 def create_features(question1, question2):
     q1len, q2len = question_len(question1, question2)
     q1words, q2words = question_words(question1, question2)
-    return [q1len, q2len, q1words, q2words]
+    word_overlap = word_match_share(question1, question2)
+    return [q1len, q2len, q1words, q2words, word_overlap]
 
 
 def euclidean_distance(vecs):
