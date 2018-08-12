@@ -251,6 +251,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
                     callbacks=callbacks)
 
             # evaluate the model
+            net.load_weights(filepath)
             scores = net.evaluate([q1_dev, q2_dev], y_dev, verbose=0)
             print(scores)
         else:
