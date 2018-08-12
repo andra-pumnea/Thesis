@@ -42,7 +42,7 @@ def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
         [output_q1, output_q2])
 
     output = concatenate([output_q1, output_q2, distance])
-    output = Dense(1, activation='relu')(output)
+    output = Dense(1, activation='sigmoid')(output)
     output = BatchNormalization()(output)
 
     output = Dense(1, activation='sigmoid')(output)

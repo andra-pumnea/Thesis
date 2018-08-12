@@ -45,8 +45,8 @@ def create_model(pretrained_embedding, maxlen=30,
     q1_aligned, q2_aligned = model_utils.soft_attention_alignment(q1_encoded, q2_encoded)
 
     # Compare
-    q1_combined = Concatenate()([q1_encoded, q2_aligned, model_utils.submult(q1_encoded, q2_aligned)])
-    q2_combined = Concatenate()([q2_encoded, q1_aligned, model_utils.submult(q2_encoded, q1_aligned)])
+    q1_combined = Concatenate()([q1_encoded, q2_aligned, model_utils.submult(q1_encoded, q2_aligned), q_len1, word_len1])
+    q2_combined = Concatenate()([q2_encoded, q1_aligned, model_utils.submult(q2_encoded, q1_aligned), q_len2,  word_len2])
     compare_layers = [
         Dense(compare_dim, activation=activation),
         Dropout(compare_dropout),
@@ -61,7 +61,7 @@ def create_model(pretrained_embedding, maxlen=30,
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep, q_len1, q_len2, word_len1, word_len2])
+    merged = Concatenate()([q1_rep, q2_rep])
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation=activation)(dense)
     dense = Dropout(dense_dropout)(dense)
