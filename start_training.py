@@ -230,18 +230,24 @@ def plot_acc_curve(history):
     ax.set_ylim([0.0, 1.0]);
 
 
+def get_callbacks(filename):
+    callbacks = [ModelCheckpoint(filename, monitor='val_acc', save_best_only=True, mode='max'),
+                 EarlyStopping(monitor='val_loss', patience=3)]
+    return callbacks
+
+
 def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, features_dev, feat):
     # define 10-fold cross validation test harness
     seed = 7
     kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
     cvscores = []
 
-    filepath = "cross_vall/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, FLAGS.model, FLAGS.experiment, feat)
-    callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
-                 EarlyStopping(monitor='val_loss', patience=3)]
-
+    i = 0
     for train, test in kfold.split(q1, y):
+        filepath = "cross_vall/fold%d.best.%s.%s.%s.%s.hdf5" % (i, FLAGS.task, FLAGS.model, FLAGS.experiment, feat)
+        callbacks = get_callbacks(filepath)
         net = create_model(word_embedding_matrix)
+
         if not features_train:
             net.fit([q1[train], q2[train]], y[train],
                     validation_data=([q1[test], q2[test]], y[test]),
@@ -268,6 +274,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
                                   y_dev, verbose=0)
             print(scores)
         cvscores.append(scores[2]*100)
+        i += 1
     return np.mean(cvscores), np.std(cvscores)
 
 
