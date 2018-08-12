@@ -234,7 +234,7 @@ def evaluate_model(net, q1, q2, y, features):
             # evaluate the model
             scores = net.evaluate([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]],
                                   y[test], verbose=0)
-        cvscores.append(scores[1])
+        cvscores.append(scores[2])
     return np.mean(cvscores), np.std(cvscores)
 
 
