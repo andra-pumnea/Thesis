@@ -129,7 +129,8 @@ def run(FLAGS):
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
-    mean, variance = evaluate_model(net, q1_train, q2_train, y_train, features_train)
+    mean, variance = evaluate_model(net, q1_train, q2_train, y_train, features_train, q1_dev, q2_dev, y_dev,
+                                    features_dev, features)
     print("Model cross-val: %.2f%% (+/- %.2f%%)" % (mean, variance))
 
 
@@ -222,7 +223,7 @@ def plot_acc_curve(history):
 def evaluate_model(net, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, features_dev, feat):
     # define 10-fold cross validation test harness
     seed = 7
-    kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
+    kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
     cvscores = []
 
     filepath = "cross_vall/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, FLAGS.model, FLAGS.experiment, feat)
