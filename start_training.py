@@ -129,8 +129,8 @@ def run(FLAGS):
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
-    mean, variance = evaluate_model(net, q1_train, q2_train, y_train, features_train, q1_dev, q2_dev, y_dev,
-                                    features_dev, features)
+    mean, variance = evaluate_model(net, q1_train, q2_train, y_train, features_train, q1_test, q2_test, y_test,
+                                    features_test, features)
     print("Model cross-val: %.2f%% (+/- %.2f%%)" % (mean, variance))
 
 
@@ -255,7 +255,7 @@ def evaluate_model(net, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, featur
             scores = net.evaluate([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d],
                                   y_dev, verbose=0)
             print(scores)
-        cvscores.append(scores[2])
+        cvscores.append(scores[2]*100)
     return np.mean(cvscores), np.std(cvscores)
 
 
