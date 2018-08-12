@@ -234,6 +234,7 @@ def evaluate_model(net, q1, q2, y, features):
                                                       callbacks=callbacks)
             # evaluate the model
             scores = net.evaluate([q1[test], q2[test]], y[test], verbose=0)
+            print(scores)
         else:
             q1len, q2len, q1words, q2words = [x for x in features]
             net.fit([q1[train], q2[train], q1len[train], q2len[train], q1words[train], q2words[train]],
@@ -241,6 +242,7 @@ def evaluate_model(net, q1, q2, y, features):
             # evaluate the model
             scores = net.evaluate([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test]],
                                   y[test], verbose=0)
+            print(scores)
         cvscores.append(scores[2])
     return np.mean(cvscores), np.std(cvscores)
 
