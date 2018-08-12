@@ -8,13 +8,14 @@ from keras import backend as K
 import csv
 import pickle
 from nltk.corpus import stopwords
+import nltk
 import re
 
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
-QUESTION_PAIRS_FILE = 'quora_duplicate_questions.tsv'
-
 EMBEDDING_DIM = 300
+
+nltk.download('stopwords')
 stops = set(stopwords.words("english"))
 
 def text_to_wordlist(text, remove_stopwords=False):
