@@ -126,7 +126,7 @@ def run(FLAGS):
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
-    mean, variance = evaluate_model(net, q1_train, q2_train, y_train)
+    mean, variance = evaluate_model(net, q1_train, q2_train, y_train, features_train)
     print("Model cross-val: %.2f%% (+/- %.2f%%)" % (mean, variance))
 
 
