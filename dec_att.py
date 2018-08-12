@@ -71,7 +71,6 @@ def create_model(pretrained_embedding, maxlen=30,
     model.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
                   metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
 
-    model.summary()
     return model
 
 

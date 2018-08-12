@@ -57,8 +57,6 @@ def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
 
     net.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
                 metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
-
-    net.summary()
     return net
 
 
