@@ -94,7 +94,7 @@ def run(FLAGS):
         # Start training
         print("Starting training at", datetime.datetime.now())
         t0 = time.time()
-        callbacks = [ModelCheckpoint(filepath, monitor='val_acc', save_best_only=True, mode='max'),
+        callbacks = [ModelCheckpoint(filepath, monitor='val_loss', save_best_only=True, mode='min'),
                      EarlyStopping(monitor='val_loss', patience=3)]
         if not features_train and not features_dev:
             history = net.fit([q1_train, q2_train],
@@ -255,8 +255,8 @@ def plot_acc_curve(history):
 
 
 def get_callbacks(filename):
-    callbacks = [ModelCheckpoint(filename, monitor='loss', save_best_only=True, mode='min'),
-                 EarlyStopping(monitor='loss', patience=5)]
+    callbacks = [ModelCheckpoint(filename, monitor='val_loss', save_best_only=True, mode='min'),
+                 EarlyStopping(monitor='val_loss', patience=5)]
     return callbacks
 
 
