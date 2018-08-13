@@ -102,7 +102,7 @@ def run(FLAGS):
                               validation_data=([q1_dev, q2_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
-                              shuffle=False,
+                              shuffle=True,
                               callbacks=callbacks)
         else:
             q1len_t, q2len_t, q1words_t, q2words_t, word_overlap_t = [x for x in features_train]
@@ -113,7 +113,7 @@ def run(FLAGS):
                                   [q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
-                              shuffle=False,
+                              shuffle=True,
                               callbacks=callbacks)
 
         pickle_file = "saved_history/history.%s.%s.%s.%s.pickle" % (FLAGS.task, model, experiment, features)
@@ -262,7 +262,7 @@ def get_callbacks(filename):
 
 def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, features_dev, feat):
     # define 10-fold cross validation test harness
-    kfold = StratifiedKFold(n_splits=5, shuffle=False, random_state=0)
+    kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
     cvscores = []
 
     i = 1
@@ -276,7 +276,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
                     validation_data=([q1[test], q2[test]], y[test]),
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
-                    shuffle=False,
+                    shuffle=True,
                     callbacks=callbacks)
 
             # evaluate the model
