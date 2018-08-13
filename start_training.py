@@ -237,8 +237,8 @@ def plot_acc_curve(history):
 
 
 def get_callbacks(filename):
-    callbacks = [ModelCheckpoint(filename, monitor='acc', save_best_only=True, mode='max'),
-                 EarlyStopping(monitor='loss', patience=3)]
+    callbacks = [ModelCheckpoint(filename, monitor='loss', save_best_only=True, mode='min'),
+                 EarlyStopping(monitor='loss', patience=5)]
     return callbacks
 
 
