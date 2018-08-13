@@ -274,6 +274,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
 
         if not features_train:
             net.fit([q1[train], q2[train]], y[train],
+                    validation_data=([q1[test], q2[test]], y[test]),
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
                     shuffle=False,
@@ -281,7 +282,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
 
             # evaluate the model
             # net.load_weights(filepath)
-            scores = net.evaluate([q1[test], q2[test]], y[test], verbose=0)
+            scores = net.evaluate([q1_dev, q2_dev], y_dev, verbose=0)
             print(scores)
         else:
             q1len, q2len, q1words, q2words, word_overlap = [x for x in features_train]
