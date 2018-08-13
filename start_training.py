@@ -8,6 +8,7 @@ import time
 
 from keras.callbacks import History, ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
+from keras import backend as K
 from keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import StratifiedKFold
@@ -35,17 +36,14 @@ rn.seed(1254)
 
 # Setting the graph-level random seed.
 tf.set_random_seed(89)
-
-from keras import backend as K
-
 session_conf = tf.ConfigProto(
-      intra_op_parallelism_threads=1,
-      inter_op_parallelism_threads=1)
+    intra_op_parallelism_threads=1,
+    inter_op_parallelism_threads=1)
 
-#Force Tensorflow to use a single thread
+# Force Tensorflow to use a single thread
 sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
 
-K.set_session(sess
 
 def run(FLAGS):
     # quora_full_dataset = FLAGS.full_dataset
@@ -111,7 +109,8 @@ def run(FLAGS):
             q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d = [x for x in features_dev]
             history = net.fit([q1_train, q2_train, q1len_t, q2len_t, q1words_t, q2words_t, word_overlap_t],
                               y_train,
-                              validation_data=([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d], y_dev),
+                              validation_data=(
+                              [q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
                               shuffle=False,
@@ -136,7 +135,7 @@ def run(FLAGS):
     write_misclassified(misclassified)
 
     cvscores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
-                              q1_test, q2_test, y_test,features_test, features)
+                              q1_test, q2_test, y_test, features_test, features)
     print("Finished running %s model on %s with %s" % (model, experiment, features))
     print_crossval(cvscores)
     print("Crossvalidation result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
