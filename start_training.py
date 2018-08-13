@@ -21,12 +21,31 @@ import gru, gru_features
 import namespace_utils
 import numpy as np
 import pandas as pd
-import matplotlib
+import tensorflow as tf
+import random as rn
+import os
 
+os.environ['PYTHONHASHSEED'] = '0'
 
-# from keras.wrappers.scikit_learn import KerasClassifier
-# from sklearn.model_selection import cross_val_score
+# Setting the seed for numpy-generated random numbers
+np.random.seed(37)
 
+# Setting the seed for python random numbers
+rn.seed(1254)
+
+# Setting the graph-level random seed.
+tf.set_random_seed(89)
+
+from keras import backend as K
+
+session_conf = tf.ConfigProto(
+      intra_op_parallelism_threads=1,
+      inter_op_parallelism_threads=1)
+
+#Force Tensorflow to use a single thread
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+
+K.set_session(sess
 
 def run(FLAGS):
     # quora_full_dataset = FLAGS.full_dataset
@@ -85,7 +104,7 @@ def run(FLAGS):
                               validation_data=([q1_dev, q2_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
-                              shuffle=True,
+                              shuffle=False,
                               callbacks=callbacks)
         else:
             q1len_t, q2len_t, q1words_t, q2words_t, word_overlap_t = [x for x in features_train]
@@ -95,7 +114,7 @@ def run(FLAGS):
                               validation_data=([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
-                              shuffle=True,
+                              shuffle=False,
                               callbacks=callbacks)
 
         pickle_file = "saved_history/history.%s.%s.%s.%s.pickle" % (FLAGS.task, model, experiment, features)
@@ -258,7 +277,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
             net.fit([q1[train], q2[train]], y[train],
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
-                    shuffle=True,
+                    shuffle=False,
                     callbacks=callbacks)
 
             # evaluate the model
@@ -272,7 +291,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
                      word_overlap[train]], y[train],
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
-                    shuffle=True,
+                    shuffle=False,
                     callbacks=callbacks)
             # evaluate the model
             scores = net.evaluate([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test],
