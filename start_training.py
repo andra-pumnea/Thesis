@@ -262,8 +262,7 @@ def get_callbacks(filename):
 
 def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, features_dev, feat):
     # define 10-fold cross validation test harness
-    seed = 7
-    kfold = StratifiedKFold(n_splits=5, shuffle=False, random_state=seed)
+    kfold = StratifiedKFold(n_splits=5, shuffle=False, random_state=0)
     cvscores = []
 
     i = 1
