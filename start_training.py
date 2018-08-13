@@ -110,7 +110,7 @@ def run(FLAGS):
             history = net.fit([q1_train, q2_train, q1len_t, q2len_t, q1words_t, q2words_t, word_overlap_t],
                               y_train,
                               validation_data=(
-                              [q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d], y_dev),
+                                  [q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
                               shuffle=False,
@@ -263,7 +263,7 @@ def get_callbacks(filename):
 def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_dev, y_dev, features_dev, feat):
     # define 10-fold cross validation test harness
     seed = 7
-    kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
+    kfold = StratifiedKFold(n_splits=5, shuffle=False, random_state=seed)
     cvscores = []
 
     i = 1
@@ -288,13 +288,15 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
             q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d = [x for x in features_dev]
             net.fit([q1[train], q2[train], q1len[train], q2len[train], q1words[train], q2words[train],
                      word_overlap[train]], y[train],
+                    validation_data=([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test],
+                                      word_overlap_d[test]], y[test]),
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
                     shuffle=False,
                     callbacks=callbacks)
             # evaluate the model
-            scores = net.evaluate([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test],
-                                   word_overlap_d[test]], y[test], verbose=0)
+            scores = net.evaluate([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d,
+                                   word_overlap_d], y_dev, verbose=0)
             print(scores)
         cvscores.append(scores[2] * 100)
         i += 1
