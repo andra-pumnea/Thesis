@@ -215,8 +215,8 @@ def word_match_share(question1, question2):
         shared_words_in_q1 = [w for w in q1words.keys() if w in q2words]
         shared_words_in_q2 = [w for w in q2words.keys() if w in q1words]
         R = (len(shared_words_in_q1) + len(shared_words_in_q2))/(len(q1words) + len(q2words))
-        word_overlap.append(round(R,2))
-    return word_overlap
+        word_overlap.append(round(R, 2))
+    return np.array(word_overlap)
 
 
 def create_features(question1, question2):
