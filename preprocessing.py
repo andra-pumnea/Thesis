@@ -211,11 +211,12 @@ def word_match_share(question1, question2):
             if word not in stops:
                 q2words[word] = 1
         if len(q1words) == 0 or len(q2words) == 0:
-            return 0
-        shared_words_in_q1 = [w for w in q1words.keys() if w in q2words]
-        shared_words_in_q2 = [w for w in q2words.keys() if w in q1words]
-        R = (len(shared_words_in_q1) + len(shared_words_in_q2))/(len(q1words) + len(q2words))
-        word_overlap.append(round(R, 2))
+            word_overlap.append(0)
+        else:
+            shared_words_in_q1 = [w for w in q1words.keys() if w in q2words]
+            shared_words_in_q2 = [w for w in q2words.keys() if w in q1words]
+            R = (len(shared_words_in_q1) + len(shared_words_in_q2))/(len(q1words) + len(q2words))
+            word_overlap.append(round(R, 2))
     print(word_overlap)
     return np.array(word_overlap)
 
@@ -223,8 +224,8 @@ def word_match_share(question1, question2):
 def create_features(question1, question2):
     q1len, q2len = question_len(question1, question2)
     q1words, q2words = question_words(question1, question2)
-    # word_overlap = word_match_share(question1, question2)
-    return [q1len, q2len, q1words, q2words]
+    word_overlap = word_match_share(question1, question2)
+    return [q1len, q2len, q1words, q2words, word_overlap]
 
 
 def euclidean_distance(vecs):

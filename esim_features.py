@@ -48,7 +48,7 @@ def create_model(pretrained_embedding,
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep, q_len1, q_len2, word_len1, word_len2, word_overlap])
+    merged = Concatenate()([q1_rep, q2_rep, q_len1, q_len2, word_len1, word_len2, word_overlap ])
 
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation='elu')(dense)
