@@ -20,7 +20,7 @@ def create_model(pretrained_embedding, maxlen=30,
     q_len2 = Input(shape=(1,), dtype='float32')
     word_len1 = Input(shape=(1,), dtype='float32')
     word_len2 = Input(shape=(1,), dtype='float32')
-    word_overlap = Input(shape=(1,), dtype='float32')
+    # word_overlap = Input(shape=(1,), dtype='float32')
 
     # Embedding
     embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
@@ -62,7 +62,7 @@ def create_model(pretrained_embedding, maxlen=30,
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep, q_len1, q_len2, word_len1, word_len2, word_overlap])
+    merged = Concatenate()([q1_rep, q2_rep, q_len1, q_len2, word_len1, word_len2])
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation=activation)(dense)
     dense = Dropout(dense_dropout)(dense)
@@ -72,7 +72,7 @@ def create_model(pretrained_embedding, maxlen=30,
     # out_ = Dense(3, activation='sigmoid')(dense)
     out_ = Dense(1, activation='sigmoid')(dense)
 
-    model = Model(inputs=[q1, q2, q_len1, q_len2, word_len1, word_len2, word_overlap], outputs=out_)
+    model = Model(inputs=[q1, q2, q_len1, q_len2, word_len1, word_len2], outputs=out_)
     model.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
                   metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     return model

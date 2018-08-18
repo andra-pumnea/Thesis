@@ -82,7 +82,7 @@ def run(FLAGS):
 
     net = create_model(word_embedding_matrix)
     plot_file = "%s_plot.png" % FLAGS.model
-    plot_model(net, to_file=plot_file, show_shapes=True, show_layer_names=True)
+    # plot_model(net, to_file=plot_file, show_shapes=True, show_layer_names=True)
     net.summary()
 
     filepath = "models/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, features)
@@ -106,12 +106,12 @@ def run(FLAGS):
                               shuffle=True,
                               callbacks=callbacks)
         else:
-            q1len_t, q2len_t, q1words_t, q2words_t, word_overlap_t = [x for x in features_train]
-            q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d = [x for x in features_dev]
-            history = net.fit([q1_train, q2_train, q1len_t, q2len_t, q1words_t, q2words_t, word_overlap_t],
+            q1len_t, q2len_t, q1words_t, q2words_t = [x for x in features_train]
+            q1len_d, q2len_d, q1words_d, q2words_d = [x for x in features_dev]
+            history = net.fit([q1_train, q2_train, q1len_t, q2len_t, q1words_t, q2words_t],
                               y_train,
                               validation_data=(
-                                  [q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d], y_dev),
+                                  [q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
                               shuffle=True,
