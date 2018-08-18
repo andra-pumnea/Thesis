@@ -9,7 +9,7 @@ import time
 from keras.callbacks import History, ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
 from keras import backend as K
-from keras.utils import to_categorical
+from keras.utils import to_categorical, plot_model
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import StratifiedKFold
 
@@ -81,6 +81,8 @@ def run(FLAGS):
         y_test = to_categorical(y_test, num_classes=None)
 
     net = create_model(word_embedding_matrix)
+    plot_file = "%s_plot.png" % FLAGS.model
+    plot_model(net, to_file=plot_file, show_shapes=True, show_layer_names=True)
     net.summary()
 
     filepath = "models/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, features)
