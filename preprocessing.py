@@ -10,7 +10,11 @@ import pickle
 from nltk.corpus import stopwords
 import nltk
 import re
-from sklearn.feature_extraction.text import TfidfVectorizer
+
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.pipeline import make_pipeline
 
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
@@ -257,12 +261,37 @@ def tfidf_word_match_share(question1, question2):
     return np.array(tf_idf)
 
 
+def compute_lda(question1, question2):
+    seed = 1024
+    lda = LatentDirichletAllocation(n_topics=10, doc_topic_prior=None,
+                                    topic_word_prior=None, learning_method='batch',
+                                    learning_decay=0.7, learning_offset=10.0, max_iter=10,
+                                    batch_size=128, evaluate_every=-1, total_samples=1000000.0,
+                                    perp_tol=0.1, mean_change_tol=0.001, max_doc_update_iter=100,
+                                    n_jobs=1, verbose=0, random_state=seed)
+    bow = CountVectorizer(ngram_range=(1, 1), max_df=0.95, min_df=3, stop_words='english')
+    vect_orig = make_pipeline(bow, lda)
+
+    corpus = question1 + question2
+
+    vect_orig.fit(corpus)
+
+    lda = []
+    for q1, q2 in zip(question1, question2):
+        q1_lda = vect_orig.transform([q1])
+        q2_lda = vect_orig.transform([q2])
+        sim = cosine_similarity(q1_lda, q2_lda)
+        lda.append(sim[0][0])
+    return np.array(lda)
+
+
 def create_features(question1, question2):
     q1len, q2len = question_len(question1, question2)
     q1words, q2words = question_words(question1, question2)
     word_overlap = word_match_share(question1, question2)
     tfidf = tfidf_word_match_share(question1, question2)
-    return [q1len, q2len, q1words, q2words, word_overlap, tfidf]
+    lda = compute_lda(question1, question2)
+    return [q1len, q2len, q1words, q2words, word_overlap, tfidf, lda]
 
 
 def euclidean_distance(vecs):
