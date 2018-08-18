@@ -10,6 +10,7 @@ import pickle
 from nltk.corpus import stopwords
 import nltk
 import re
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
@@ -217,15 +218,51 @@ def word_match_share(question1, question2):
             shared_words_in_q2 = [w for w in q2words.keys() if w in q1words]
             R = (len(shared_words_in_q1) + len(shared_words_in_q2))/(len(q1words) + len(q2words))
             word_overlap.append(round(R, 2))
-    print(word_overlap)
     return np.array(word_overlap)
+
+
+def tfidf_word_match_share(question1, question2):
+    qs = question1 + question2
+    tfidf_vectorizer = TfidfVectorizer(stop_words='english', min_df=3)
+    tfidf_matrix = tfidf_vectorizer.fit_transform(qs)
+    feature_names = tfidf_vectorizer.get_feature_names()
+    dense = tfidf_matrix.todense()
+    word_index_dict = dict((j, i) for i, j in enumerate(feature_names))
+
+    tf_idf = []
+    for q1, q2 in zip(question1, question2):
+        q1words = {}
+        q2words = {}
+        for word in str(q1).lower().split():
+            if word not in stops:
+                q1words[word] = 1
+        for word in str(q2).lower().split():
+            if word not in stops:
+                q2words[word] = 1
+        if len(q1words) == 0 or len(q2words) == 0:
+            tf_idf.append(0)
+        else:
+            q1_tfidf = tfidf_vectorizer.transform([" ".join(q1words.keys())])
+            q2_tfidf = tfidf_vectorizer.transform([" ".join(q2words.keys())])
+            inter = np.intersect1d(q1_tfidf.indices, q2_tfidf.indices)
+            shared_weights = 0
+            for word_index in inter:
+                shared_weights += (q1_tfidf[0, word_index] + q2_tfidf[0, word_index])
+            total_weights = q1_tfidf.sum() + q2_tfidf.sum()
+            if np.sum(total_weights) == 0:
+                tf_idf.append(0)
+            else:
+                score = np.sum(shared_weights) / np.sum(total_weights)
+                tf_idf.append(score)
+    return tf_idf
 
 
 def create_features(question1, question2):
     q1len, q2len = question_len(question1, question2)
     q1words, q2words = question_words(question1, question2)
     word_overlap = word_match_share(question1, question2)
-    return [q1len, q2len, q1words, q2words, word_overlap]
+    tfidf = tfidf_word_match_share(question1, question2)
+    return [q1len, q2len, q1words, q2words, word_overlap, tfidf]
 
 
 def euclidean_distance(vecs):
