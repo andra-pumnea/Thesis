@@ -96,8 +96,7 @@ def run(FLAGS):
         # Start training
         print("Starting training at", datetime.datetime.now())
         t0 = time.time()
-        callbacks = [ModelCheckpoint(filepath, monitor='val_loss', save_best_only=True, mode='min'),
-                     EarlyStopping(monitor='val_loss', patience=3)]
+        callbacks = get_callbacks(filepath)
         if not features_train and not features_dev:
             history = net.fit([q1_train, q2_train],
                               y_train,
