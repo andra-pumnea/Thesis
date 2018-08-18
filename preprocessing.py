@@ -226,8 +226,8 @@ def tfidf_word_match_share(question1, question2):
     tfidf_vectorizer = TfidfVectorizer(stop_words='english', min_df=3)
     tfidf_matrix = tfidf_vectorizer.fit_transform(qs)
     feature_names = tfidf_vectorizer.get_feature_names()
-    dense = tfidf_matrix.todense()
-    word_index_dict = dict((j, i) for i, j in enumerate(feature_names))
+    # dense = tfidf_matrix.todense()
+    # word_index_dict = dict((j, i) for i, j in enumerate(feature_names))
 
     tf_idf = []
     for q1, q2 in zip(question1, question2):
@@ -253,8 +253,8 @@ def tfidf_word_match_share(question1, question2):
                 tf_idf.append(0)
             else:
                 score = np.sum(shared_weights) / np.sum(total_weights)
-                tf_idf.append(score)
-    return tf_idf
+                tf_idf.append(round(score, 2))
+    return np.array(tf_idf)
 
 
 def create_features(question1, question2):
