@@ -13,17 +13,11 @@ history = History()
 n_hidden = 250
 
 
-def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
+def create_model(word_embedding_matrix, maxlen=30, lr=1e-3, featlen=14,):
     # The visible layer
     question1 = Input(shape=(maxlen,))
     question2 = Input(shape=(maxlen,))
-    q_len1 = Input(shape=(1,), dtype='float32')
-    q_len2 = Input(shape=(1,), dtype='float32')
-    word_len1 = Input(shape=(1,), dtype='float32')
-    word_len2 = Input(shape=(1,), dtype='float32')
-    word_overlap = Input(shape=(1,), dtype='float32')
-    tfidf = Input(shape=(1,), dtype='float32')
-    lda = Input(shape=(1,), dtype='float32')
+    features = Input(shape=(featlen,), name='features', sparse=False)
 
     print(word_embedding_matrix.shape)
     in_dim, out_dim = word_embedding_matrix.shape
@@ -51,12 +45,12 @@ def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
     output = concatenate([output_q1, output_q2])
     output = BatchNormalization()(output)
     output = Dense(1, activation='sigmoid')(output)
-    output = concatenate([output, distance, q_len1, q_len2, word_len1, word_len2, word_overlap, tfidf, lda])
+    output = concatenate([output, distance, features])
     output = BatchNormalization()(output)
     output = Dense(1, activation='sigmoid')(output)
 
     # Pack it all up into a model
-    net = Model([question1, question2, q_len1, q_len2, word_len1, word_len2, word_overlap, tfidf, lda], [output])
+    net = Model([question1, question2, features], [output])
 
     net.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
                 metrics=['binary_crossentropy', 'accuracy', model_utils.f1])

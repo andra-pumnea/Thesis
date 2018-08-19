@@ -165,7 +165,7 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat,train
     q1_data, q2_data, labels = pad_sentences(question1_word_sequences, question2_word_sequences,
                                              is_duplicate, maxlen)
 
-    features = np.empty(shape=(1,1))
+    features = np.empty(shape=(1, 1))
     if feat == 'features':
         features = create_features(question1, question2)
 
@@ -190,6 +190,7 @@ def question_len(question1, question2):
         q1, q2 = str(q1), str(q2)
         q1len.append([len(q1)])
         q2len.append([len(q2)])
+    print("Created question character len feature")
     return np.array(q1len), np.array(q2len)
 
 
@@ -202,6 +203,7 @@ def question_words(question1, question2):
         q1words.append([len(words_q1)])
         q2words.append([len(words_q2)])
 
+    print("Created question word len feature")
     return np.array(q1words), np.array(q2words)
 
 
@@ -223,6 +225,7 @@ def word_match_share(question1, question2):
             shared_words_in_q2 = [w for w in q2words.keys() if w in q1words]
             R = (len(shared_words_in_q1) + len(shared_words_in_q2))/(len(q1words) + len(q2words))
             word_overlap.append([round(R, 2)])
+    print("Created word_overlap feature")
     return np.array(word_overlap)
 
 
@@ -259,6 +262,7 @@ def tfidf_word_match_share(question1, question2):
             else:
                 score = np.sum(shared_weights) / np.sum(total_weights)
                 tf_idf.append([round(score, 2)])
+    print("Created tf_idf features feature")
     return np.array(tf_idf)
 
 
@@ -283,6 +287,7 @@ def compute_lda(question1, question2):
         q2_lda = vect_orig.transform([q2])
         sim = cosine_similarity(q1_lda, q2_lda)
         lda.append([sim[0][0]])
+    print("Created LDA feature feature")
     return np.array(lda)
 
 
@@ -291,6 +296,7 @@ def fw_qratio(question1, question2):
     for q1, q2 in zip(question1, question2):
         qratio = fuzz.QRatio(str(q1), str(q2)) / 100
         fuzzy.append([qratio])
+    print("Created fuzz qratio feature")
     return np.array(fuzzy)
 
 
@@ -299,6 +305,7 @@ def fw_wratio(question1, question2):
     for q1, q2 in zip(question1, question2):
         WRatio = fuzz.WRatio(str(q1), str(q2)) / 100
         fuzzy.append([WRatio])
+    print("Created fuzz wratio feature")
     return np.array(fuzzy)
 
 
@@ -307,6 +314,7 @@ def fw_partial_ratio(question1, question2):
     for q1, q2 in zip(question1, question2):
         partial_ratio = fuzz.partial_ratio(str(q1), str(q2)) / 100
         fuzzy.append([partial_ratio])
+    print("Created fuzz partial_ratio feature")
     return np.array(fuzzy)
 
 
@@ -315,6 +323,7 @@ def fw_partial_token_sort_ratio(question1, question2):
     for q1, q2 in zip(question1, question2):
         partial_ratio = fuzz.partial_token_sort_ratio(str(q1), str(q2)) / 100
         fuzzy.append([partial_ratio])
+    print("Created fuzz partial_token_sort_ratio feature")
     return np.array(fuzzy)
 
 
@@ -323,6 +332,7 @@ def fw_partial_token_set_ratio(question1, question2):
     for q1, q2 in zip(question1, question2):
         partial_ratio = fuzz.partial_token_set_ratio(str(q1), str(q2)) / 100
         fuzzy.append([partial_ratio])
+    print("Created fuzz partial_token_set_ratio feature")
     return np.array(fuzzy)
 
 
@@ -331,6 +341,7 @@ def fw_token_set_ratio(question1, question2):
     for q1, q2 in zip(question1, question2):
         partial_ratio = fuzz.token_set_ratio(str(q1), str(q2)) / 100
         fuzzy.append([partial_ratio])
+    print("Created fuzz token_set_ratio feature")
     return np.array(fuzzy)
 
 
@@ -339,6 +350,7 @@ def fw_token_sort_ratio(question1, question2):
     for q1, q2 in zip(question1, question2):
         partial_ratio = fuzz.token_sort_ratio(str(q1), str(q2)) / 100
         fuzzy.append([partial_ratio])
+    print("Created fuzz token_sort_ratio feature")
     return np.array(fuzzy)
 
 
@@ -372,6 +384,7 @@ def create_features(question1, question2):
         token_set_ratio,
         token_sort_ratio
     ])
+    print('Feature vector size: %s' % features.shape[1])
     return features
 
 

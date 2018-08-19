@@ -9,19 +9,14 @@ import model_utils
 # https://www.kaggle.com/lamdang/dl-models
 def create_model(pretrained_embedding,
                  maxlen=30,
+                 featlen=14,
                  lstm_dim=300,
                  dense_dim=300,
                  dense_dropout=0.5):
     # Based on arXiv:1609.06038
     q1 = Input(name='q1', shape=(maxlen,))
     q2 = Input(name='q2', shape=(maxlen,))
-    q_len1 = Input(shape=(1,), dtype='float32')
-    q_len2 = Input(shape=(1,), dtype='float32')
-    word_len1 = Input(shape=(1,), dtype='float32')
-    word_len2 = Input(shape=(1,), dtype='float32')
-    word_overlap = Input(shape=(1,), dtype='float32')
-    tfidf = Input(shape=(1,), dtype='float32')
-    lda = Input(shape=(1,), dtype='float32')
+    features = Input(shape=(featlen,), name='features', sparse=False)
 
     # Embedding
     embedding = model_utils.create_pretrained_embedding(pretrained_embedding, mask_zero=False)
@@ -50,7 +45,7 @@ def create_model(pretrained_embedding,
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep, q_len1, q_len2, word_len1, word_len2, word_overlap, tfidf, lda])
+    merged = Concatenate()([q1_rep, q2_rep, features])
 
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation='elu')(dense)
@@ -62,7 +57,7 @@ def create_model(pretrained_embedding,
     # out_ = Dense(3, activation='sigmoid')(dense)
     out_ = Dense(1, activation='sigmoid')(dense)
 
-    model = Model(inputs=[q1, q2, q_len1, q_len2, word_len1, word_len2, word_overlap, tfidf, lda], outputs=out_)
+    model = Model(inputs=[q1, q2, features], outputs=out_)
     model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
                   metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     return model
