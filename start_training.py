@@ -97,7 +97,7 @@ def run(FLAGS):
         print("Starting training at", datetime.datetime.now())
         t0 = time.time()
         callbacks = get_callbacks(filepath)
-        if not features_train and not features_dev:
+        if not features_train.size and not features_dev.size:
             history = net.fit([q1_train, q2_train],
                               y_train,
                               validation_data=([q1_dev, q2_dev], y_dev),
@@ -177,7 +177,7 @@ def get_best(history):
 def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, features):
     model.load_weights(filepath)
 
-    if not features:
+    if not features.size:
         scores = model.evaluate([q1_test, q2_test], y_test, verbose=0)
     else:
         # q1len, q2len, q1words, q2words, word_overlap, tfidf, lda = [x for x in features]
@@ -226,7 +226,7 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, features):
 
 
 def get_predictions(model, q1_test, q2_test, features):
-    if not features:
+    if not features.size:
         y_pred = model.predict([q1_test, q2_test])
     else:
         # q1len, q2len, q1words, q2words, word_overlap, tfidf, lda = [x for x in features]
@@ -272,7 +272,7 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
         callbacks = get_callbacks(filepath)
         net = create_model(word_embedding_matrix)
 
-        if not features_train:
+        if not features_train.size:
             net.fit([q1[train], q2[train]], y[train],
                     validation_data=([q1[test], q2[test]], y[test]),
                     batch_size=FLAGS.batch_size,
@@ -285,19 +285,16 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, features_train, q1_dev, q2_
             scores = net.evaluate([q1_dev, q2_dev], y_dev, verbose=0)
             print(scores)
         else:
-            q1len, q2len, q1words, q2words, word_overlap, tfidf, lda = [x for x in features_train]
-            q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d, tfidf_d, lda_d = [x for x in features_dev]
-            net.fit([q1[train], q2[train], q1len[train], q2len[train], q1words[train], q2words[train],
-                     word_overlap[train], tfidf[train], lda[train]], y[train],
-                    validation_data=([q1[test], q2[test], q1len[test], q2len[test], q1words[test], q2words[test],
-                                      word_overlap_d[test], tfidf[test], lda[test]], y[test]),
+            # q1len, q2len, q1words, q2words, word_overlap, tfidf, lda = [x for x in features_train]
+            # q1len_d, q2len_d, q1words_d, q2words_d, word_overlap_d, tfidf_d, lda_d = [x for x in features_dev]
+            net.fit([q1[train], q2[train], features_train[train]], y[train],
+                    validation_data=([q1[test], q2[test], features_train[test]], y[test]),
                     batch_size=FLAGS.batch_size,
                     nb_epoch=FLAGS.max_epochs,
                     shuffle=False,
                     callbacks=callbacks)
             # evaluate the model
-            scores = net.evaluate([q1_dev, q2_dev, q1len_d, q2len_d, q1words_d, q2words_d,
-                                   word_overlap_d, tfidf_d, lda_d], y_dev, verbose=0)
+            scores = net.evaluate([q1_dev, q2_dev, features_dev], y_dev, verbose=0)
             print(scores)
         cvscores.append(scores[2] * 100)
         i += 1

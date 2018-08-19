@@ -165,7 +165,7 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat,train
     q1_data, q2_data, labels = pad_sentences(question1_word_sequences, question2_word_sequences,
                                              is_duplicate, maxlen)
 
-    features = []
+    features = np.empty(shape=(1,1))
     if feat == 'features':
         features = create_features(question1, question2)
 
