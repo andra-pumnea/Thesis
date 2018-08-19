@@ -98,8 +98,7 @@ def run(FLAGS):
         t0 = time.time()
         callbacks = get_callbacks(filepath)
         if not features_train.size and not features_dev.size:
-            history = net.fit([q1_train, q2_train],
-                              y_train,
+            history = net.fit([q1_train, q2_train], y_train,
                               validation_data=([q1_dev, q2_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
@@ -107,8 +106,7 @@ def run(FLAGS):
                               callbacks=callbacks)
         else:
             history = net.fit([q1_train, q2_train, features_train], y_train,
-                              validation_data=(
-                                  [q1_dev, q2_dev, features_dev], y_dev),
+                              validation_data=([q1_dev, q2_dev, features_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
                               shuffle=False,
