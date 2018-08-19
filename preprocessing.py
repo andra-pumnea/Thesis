@@ -15,6 +15,7 @@ from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.pipeline import make_pipeline
+from fuzzywuzzy import fuzz
 
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
@@ -187,8 +188,8 @@ def question_len(question1, question2):
 
     for q1, q2 in zip(question1, question2):
         q1, q2 = str(q1), str(q2)
-        q1len.append(len(q1))
-        q2len.append(len(q2))
+        q1len.append([len(q1)])
+        q2len.append([len(q2)])
     return np.array(q1len), np.array(q2len)
 
 
@@ -198,8 +199,8 @@ def question_words(question1, question2):
 
     for q1, q2 in zip(question1, question2):
         words_q1, words_q2 = str(q1).split(), str(q2).split()
-        q1words.append(len(words_q1))
-        q2words.append(len(words_q2))
+        q1words.append([len(words_q1)])
+        q2words.append([len(words_q2)])
 
     return np.array(q1words), np.array(q2words)
 
@@ -216,12 +217,12 @@ def word_match_share(question1, question2):
             if word not in stops:
                 q2words[word] = 1
         if len(q1words) == 0 or len(q2words) == 0:
-            word_overlap.append(0)
+            word_overlap.append([0])
         else:
             shared_words_in_q1 = [w for w in q1words.keys() if w in q2words]
             shared_words_in_q2 = [w for w in q2words.keys() if w in q1words]
             R = (len(shared_words_in_q1) + len(shared_words_in_q2))/(len(q1words) + len(q2words))
-            word_overlap.append(round(R, 2))
+            word_overlap.append([round(R, 2)])
     return np.array(word_overlap)
 
 
@@ -244,7 +245,7 @@ def tfidf_word_match_share(question1, question2):
             if word not in stops:
                 q2words[word] = 1
         if len(q1words) == 0 or len(q2words) == 0:
-            tf_idf.append(0)
+            tf_idf.append([0])
         else:
             q1_tfidf = tfidf_vectorizer.transform([" ".join(q1words.keys())])
             q2_tfidf = tfidf_vectorizer.transform([" ".join(q2words.keys())])
@@ -254,10 +255,10 @@ def tfidf_word_match_share(question1, question2):
                 shared_weights += (q1_tfidf[0, word_index] + q2_tfidf[0, word_index])
             total_weights = q1_tfidf.sum() + q2_tfidf.sum()
             if np.sum(total_weights) == 0:
-                tf_idf.append(0)
+                tf_idf.append([0])
             else:
                 score = np.sum(shared_weights) / np.sum(total_weights)
-                tf_idf.append(round(score, 2))
+                tf_idf.append([round(score, 2)])
     return np.array(tf_idf)
 
 
@@ -281,8 +282,64 @@ def compute_lda(question1, question2):
         q1_lda = vect_orig.transform([q1])
         q2_lda = vect_orig.transform([q2])
         sim = cosine_similarity(q1_lda, q2_lda)
-        lda.append(sim[0][0])
+        lda.append([sim[0][0]])
     return np.array(lda)
+
+
+def fw_qratio(question1, question2):
+    fuzzy = []
+    for q1, q2 in zip(question1, question2):
+        qratio = fuzz.QRatio(str(q1), str(q2)) / 100
+        fuzzy.append([qratio])
+    return np.array(fuzzy)
+
+
+def fw_wratio(question1, question2):
+    fuzzy = []
+    for q1, q2 in zip(question1, question2):
+        WRatio = fuzz.WRatio(str(q1), str(q2)) / 100
+        fuzzy.append([WRatio])
+    return np.array(fuzzy)
+
+
+def fw_partial_ratio(question1, question2):
+    fuzzy = []
+    for q1, q2 in zip(question1, question2):
+        partial_ratio = fuzz.partial_ratio(str(q1), str(q2)) / 100
+        fuzzy.append([partial_ratio])
+    return np.array(fuzzy)
+
+
+def fw_partial_token_sort_ratio(question1, question2):
+    fuzzy = []
+    for q1, q2 in zip(question1, question2):
+        partial_ratio = fuzz.partial_token_sort_ratio(str(q1), str(q2)) / 100
+        fuzzy.append([partial_ratio])
+    return np.array(fuzzy)
+
+
+def fw_partial_token_set_ratio(question1, question2):
+    fuzzy = []
+    for q1, q2 in zip(question1, question2):
+        partial_ratio = fuzz.partial_token_set_ratio(str(q1), str(q2)) / 100
+        fuzzy.append([partial_ratio])
+    return np.array(fuzzy)
+
+
+def fw_token_set_ratio(question1, question2):
+    fuzzy = []
+    for q1, q2 in zip(question1, question2):
+        partial_ratio = fuzz.token_set_ratio(str(q1), str(q2)) / 100
+        fuzzy.append([partial_ratio])
+    return np.array(fuzzy)
+
+
+def fw_token_sort_ratio(question1, question2):
+    fuzzy = []
+    for q1, q2 in zip(question1, question2):
+        partial_ratio = fuzz.token_sort_ratio(str(q1), str(q2)) / 100
+        fuzzy.append([partial_ratio])
+    return np.array(fuzzy)
 
 
 def create_features(question1, question2):
@@ -291,7 +348,31 @@ def create_features(question1, question2):
     word_overlap = word_match_share(question1, question2)
     tfidf = tfidf_word_match_share(question1, question2)
     lda = compute_lda(question1, question2)
-    return [q1len, q2len, q1words, q2words, word_overlap, tfidf, lda]
+    qratio = fw_qratio(question1, question2)
+    wratio = fw_wratio(question1, question2)
+    partial_ratio = fw_partial_ratio(question1, question2)
+    partial_token_sort_ratio = fw_partial_token_sort_ratio(question1, question2)
+    partial_token_set_ratio = fw_partial_token_set_ratio(question1, question2)
+    token_set_ratio = fw_token_set_ratio(question1, question2)
+    token_sort_ratio = fw_token_sort_ratio(question1, question2)
+
+    features = np.hstack([
+        q1len,
+        q2len,
+        q1words,
+        q2words,
+        word_overlap,
+        tfidf,
+        lda,
+        qratio,
+        wratio,
+        partial_ratio,
+        partial_token_set_ratio,
+        partial_token_sort_ratio,
+        token_set_ratio,
+        token_sort_ratio
+    ])
+    return features
 
 
 def euclidean_distance(vecs):
