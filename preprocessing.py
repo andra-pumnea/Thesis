@@ -177,7 +177,8 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat,train
 
 
 def get_filename(path):
-    return path.rsplit('/', 1)
+    split_file = path.rsplit('/', 1)
+    return split_file[1]
 
 
 # save the file everytime a new feature is added
