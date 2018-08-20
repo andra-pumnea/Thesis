@@ -160,7 +160,8 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat,train
     q1_data, q2_data, labels = pad_sentences(question1_word_sequences, question2_word_sequences,
                                              is_duplicate, maxlen)
 
-    features = handle_features(question1, question2, feat, task, experiment, filename)
+    file = get_filename(filename)
+    features = handle_features(question1, question2, feat, task, experiment, file)
 
     X = np.stack((q1_data, q2_data), axis=1)
     y = labels
@@ -175,9 +176,13 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat,train
         return Q1, Q2, y, features
 
 
+def get_filename(path):
+    return path.rsplit('/', 1)
+
+
 # save the file everytime a new feature is added
-def handle_features(question1, question2, feat, task, experiment, filename):
-    feature_filename = "feature_files/%s.%s.%s.features.npy" % (task, experiment, filename)
+def handle_features(question1, question2, feat, task, experiment, file):
+    feature_filename = "feature_files/%s.%s.%s.features.npy" % (task, experiment, file)
     features = np.array([])
 
     if feat == 'features':
