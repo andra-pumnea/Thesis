@@ -19,7 +19,9 @@ sess.run(tf.global_variables_initializer())
 sess.run(tf.tables_initializer())
 
 batch_size = 32
-max_len=40
+max_len = 40
+
+
 def ElmoEmbedding(x):
     return elmo_model(inputs={
         "tokens": tf.squeeze(tf.cast(x, tf.string)),
@@ -38,15 +40,14 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-3):
     question1 = Input(shape=(maxlen,), dtype=tf.string)
     question2 = Input(shape=(maxlen,), dtype=tf.string)
 
-    print(word_embedding_matrix.shape)
-    in_dim, out_dim = word_embedding_matrix.shape
-    embedding_layer = Embedding(in_dim,
-                                out_dim,
-                                weights=[word_embedding_matrix],
-                                input_length=maxlen,
-                                trainable=True)
-
     if embeddings == 'glove':
+        print(word_embedding_matrix.shape)
+        in_dim, out_dim = word_embedding_matrix.shape
+        embedding_layer = Embedding(in_dim,
+                                    out_dim,
+                                    weights=[word_embedding_matrix],
+                                    input_length=maxlen,
+                                    trainable=True)
         # Embedded version of the inputs
         encoded_q1 = embedding_layer(question1)
         encoded_q2 = embedding_layer(question2)

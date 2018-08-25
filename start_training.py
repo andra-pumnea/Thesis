@@ -58,7 +58,7 @@ def run(FLAGS):
     experiment = FLAGS.experiment
     dataset = FLAGS.task
     features = FLAGS.features
-    init_embeddings = 1
+    init_embeddings = 0
 
     word_index = vocab.prepare_vocab(train_file, embeddings)
 
@@ -81,11 +81,12 @@ def run(FLAGS):
                                                                                     features,
                                                                                     embeddings,
                                                                                     init_embeddings)
+        word_embedding_matrix = np.zeros(1)
 
     q1_dev, q2_dev, y_dev, features_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
-                                                                        dataset, features)
+                                                                        dataset, features, embeddings)
     q1_test, q2_test, y_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment,
-                                                                            dataset, features)
+                                                                            dataset, features, embeddings)
 
     if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
