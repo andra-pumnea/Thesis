@@ -16,8 +16,17 @@ sess.run(tf.global_variables_initializer())
 sess.run(tf.tables_initializer())
 
 
+batch_size = 32
+max_len = 40
+
+
 def ElmoEmbedding(x):
-    return elmo_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
+    return elmo_model(inputs={
+        "tokens": tf.squeeze(tf.cast(x, tf.string)),
+        "sequence_len": tf.constant(batch_size * [max_len])
+    },
+        signature="tokens",
+        as_dict=True)["elmo"]
 
 
 # https://www.kaggle.com/lamdang/dl-models
@@ -31,11 +40,11 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
     q1 = Input(name='q1', shape=(maxlen,))
     q2 = Input(name='q2', shape=(maxlen,))
 
-    # Embedding
-    embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
-                                                        mask_zero=False)
 
     if embeddings == 'glove':
+        # Embedding
+        embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
+                                                            mask_zero=False)
         q1_embed = embedding(q1)
         q2_embed = embedding(q2)
     else:

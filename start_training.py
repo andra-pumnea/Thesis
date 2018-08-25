@@ -200,7 +200,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, features):
     model.load_weights(filepath)
 
     if not features.size:
-        scores = model.evaluate([q1_test, q2_test], y_test, verbose=0)
+        scores = model.evaluate([q1_test, q2_test], y_test, verbose=0, batch_size=50)
     else:
         scores = model.evaluate([q1_test, q2_test, features], y_test, verbose=0)
     loss = scores[1]
@@ -248,7 +248,7 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, features):
 
 def get_predictions(model, q1_test, q2_test, features):
     if not features.size:
-        y_pred = model.predict([q1_test, q2_test])
+        y_pred = model.predict([q1_test, q2_test], batch_size=FLAGS.batch_size)
     else:
         y_pred = model.predict([q1_test, q2_test, features])
     y_pred = (y_pred > 0.5)
