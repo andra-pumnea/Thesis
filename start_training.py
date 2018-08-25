@@ -69,6 +69,7 @@ def run(FLAGS):
                                                                                                        experiment,
                                                                                                        dataset,
                                                                                                        features,
+                                                                                                       embeddings,
                                                                                                        init_embeddings)
     q1_dev, q2_dev, y_dev, features_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
                                                                         dataset, features)

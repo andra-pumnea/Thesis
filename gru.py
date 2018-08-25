@@ -18,9 +18,15 @@ elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
 sess.run(tf.global_variables_initializer())
 sess.run(tf.tables_initializer())
 
-
+batch_size = 32
+max_len=40
 def ElmoEmbedding(x):
-    return elmo_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
+    return elmo_model(inputs={
+        "tokens": tf.squeeze(tf.cast(x, tf.string)),
+        "sequence_len": tf.constant(batch_size * [max_len])
+    },
+        signature="tokens",
+        as_dict=True)["elmo"]
 
 
 history = History()
@@ -29,8 +35,8 @@ n_hidden = 250
 
 def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-3):
     # The visible layer
-    question1 = Input(shape=(maxlen,))
-    question2 = Input(shape=(maxlen,))
+    question1 = Input(shape=(maxlen,), dtype=tf.string)
+    question2 = Input(shape=(maxlen,), dtype=tf.string)
 
     print(word_embedding_matrix.shape)
     in_dim, out_dim = word_embedding_matrix.shape
@@ -45,8 +51,8 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-3):
         encoded_q1 = embedding_layer(question1)
         encoded_q2 = embedding_layer(question2)
     else:
-        encoded_q1 = Lambda(ElmoEmbedding, output_shape=(1024,))(question1)
-        encoded_q2 = Lambda(ElmoEmbedding, output_shape=(1024,))(question2)
+        encoded_q1 = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(question1)
+        encoded_q2 = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(question2)
 
     # Since this is a siamese network, both sides share the same GRU
     shared_layer = GRU(n_hidden, kernel_initializer='glorot_uniform',

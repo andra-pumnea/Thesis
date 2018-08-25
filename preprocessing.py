@@ -1,8 +1,7 @@
 from __future__ import print_function
 import numpy as np
-from zipfile import ZipFile
 from os.path import expanduser, exists
-from keras.preprocessing.text import Tokenizer
+import keras
 from keras.preprocessing.sequence import pad_sequences
 from keras import backend as K
 import csv
@@ -154,11 +153,51 @@ def init_embeddings(w_index, max_nb_words, task, experiment):
     return word_embedding_matrix
 
 
-def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat,train=0):
-    question1, question2, is_duplicate = read_dataset(filename)
+def tokenize_text(data, max_len):
+    questions = []
+    for document in data:
+        word_list = keras.preprocessing.text.text_to_word_sequence(document['text'], lower=False)
+        questions.append(word_list[0:max_len])
+    return questions
+
+
+def pad_tokens(data, max_len):
+    new_data = []
+    for seq in data:
+        new_seq = []
+        for i in range(max_len):
+            try:
+                new_seq.append(seq[i])
+            except:
+                new_seq.append("__PAD__")
+        new_data.append(new_seq)
+    return new_data
+
+
+def prepare_glove(maxlen, question1, question2, is_duplicate):
     question1_word_sequences, question2_word_sequences, w_index = tokenize_data(question1, question2)
     q1_data, q2_data, labels = pad_sentences(question1_word_sequences, question2_word_sequences,
                                              is_duplicate, maxlen)
+    return q1_data, q2_data, labels, w_index
+
+
+def prepare_elmo(maxlen, question1, question2, is_duplicate):
+    q1_tokens = tokenize_data(question1)
+    q2_tokens = tokenize_data(question2)
+
+    q1_data = pad_tokens(q1_tokens, maxlen)
+    q2_data = pad_tokens(q2_tokens, maxlen)
+    labels = np.array(is_duplicate, dtype=int)
+    return np.array(q1_data), np.array(q2_data), labels
+
+
+def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embeddings, train=0):
+    question1, question2, is_duplicate = read_dataset(filename)
+
+    if embeddings == 'glove':
+        q1_data, q2_data, labels, w_index = prepare_glove(maxlen, question1, question2, is_duplicate)
+    else:
+        q1_data, q2_data, labels = prepare_elmo(maxlen, question1, question2, is_duplicate)
 
     file = get_filename(filename)
     features = handle_features(question1, question2, feat, task, experiment, file)
