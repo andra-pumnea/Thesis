@@ -7,13 +7,27 @@ from keras.layers import Input, Embedding, GRU, Lambda, Dense, concatenate, Batc
 from keras.optimizers import Adam
 from keras import regularizers
 from keras.callbacks import History
+import tensorflow as tf
+import tensorflow_hub as hub
+from keras import backend as K
+
+sess = tf.Session()
+K.set_session(sess)
+
+elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
+sess.run(tf.global_variables_initializer())
+sess.run(tf.tables_initializer())
+
+
+def ElmoEmbedding(x):
+    return elmo_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
+
 
 history = History()
-
 n_hidden = 250
 
 
-def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
+def create_model(word_embedding_matrix, embeddings='glove',maxlen=30, lr=1e-3):
     # The visible layer
     question1 = Input(shape=(maxlen,))
     question2 = Input(shape=(maxlen,))
@@ -26,9 +40,13 @@ def create_model(word_embedding_matrix, maxlen=30, lr=1e-3):
                                 input_length=maxlen,
                                 trainable=True)
 
-    # Embedded version of the inputs
-    encoded_q1 = embedding_layer(question1)
-    encoded_q2 = embedding_layer(question2)
+    if embeddings == 'glove':
+        # Embedded version of the inputs
+        encoded_q1 = embedding_layer(question1)
+        encoded_q2 = embedding_layer(question2)
+    else:
+        encoded_q1 = Lambda(ElmoEmbedding, output_shape=(1024,))(question1)
+        encoded_q2 = Lambda(ElmoEmbedding, output_shape=(1024,))(question2)
 
     # Since this is a siamese network, both sides share the same GRU
     shared_layer = GRU(n_hidden, kernel_initializer='glorot_uniform',

@@ -81,7 +81,7 @@ def run(FLAGS):
         y_test = to_categorical(y_test, num_classes=None)
 
     net = create_model(word_embedding_matrix)
-    plot_file = "%s_%s_plot.png" % (FLAGS.model, features)
+    # plot_file = "%s_%s_plot.png" % (FLAGS.model, features)
     # plot_model(net, to_file=plot_file, show_shapes=True, show_layer_names=True)
     net.summary()
 
@@ -126,16 +126,17 @@ def run(FLAGS):
         print("------------Unknown mode------------")
 
     get_confusion_matrix(net, q1_test, q2_test, y_test, features_test)
+    # get_intermediate_layer(net)
 
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
-    # cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
-    #                           q1_test, q2_test, y_test, features_test, features)
+    cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
+                               q1_test, q2_test, y_test, features_test, features)
     print("Finished running %s model on %s with %s" % (model, experiment, features))
-    # print_crossval(cvscores)
-    # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
-    # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
+    print_crossval(cvscores)
+    print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
+    print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, features_test)
     print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 
@@ -144,11 +145,12 @@ def create_model(word_embedding_matrix):
     model = FLAGS.model
     features = FLAGS.features
     maxlen = FLAGS.max_sent_length
+    embeddings = FLAGS.embeddings
 
     if model == "dec_att" and features == 'features':
         net = dec_att_features.create_model(word_embedding_matrix, maxlen)
     elif model == "dec_att" and features != 'features':
-        net = dec_att.create_model(word_embedding_matrix, maxlen)
+        net = dec_att.create_model(word_embedding_matrix, maxlen, embeddings)
     elif model == "esim" and features == 'features':
         net = esim_features.create_model(word_embedding_matrix, maxlen)
     elif model == "esim" and features != 'features':
@@ -156,8 +158,19 @@ def create_model(word_embedding_matrix):
     elif model == "gru" and features == 'features':
         net = gru_features.create_model(word_embedding_matrix, maxlen)
     elif model == "gru" and features != 'features':
-        net = gru.create_model(word_embedding_matrix, maxlen)
+        net = gru.create_model(word_embedding_matrix, maxlen, embeddings)
     return net
+
+
+def get_intermediate_layer(net):
+    # interm_layer = net.get_layer(layer_name).output
+    inp = net.input  # input placeholder
+    outputs = [layer.output for layer in net.layers]  # all layer outputs
+    functor = K.function([inp] + [K.learning_phase()], outputs)
+
+    test = np.random.random(300)[np.newaxis, ...]
+    layer_outs = functor([test, 1.])
+    print(layer_outs)
 
 
 def print_crossval(cvscores):
