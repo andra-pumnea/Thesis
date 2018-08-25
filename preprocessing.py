@@ -156,7 +156,7 @@ def init_embeddings(w_index, max_nb_words, task, experiment):
 def tokenize_text(data, max_len):
     questions = []
     for document in data:
-        word_list = keras.preprocessing.text.text_to_word_sequence(document['text'], lower=False)
+        word_list = keras.preprocessing.text.text_to_word_sequence(document, lower=False)
         questions.append(word_list[0:max_len])
     return questions
 
@@ -182,8 +182,8 @@ def prepare_glove(maxlen, question1, question2, is_duplicate):
 
 
 def prepare_elmo(maxlen, question1, question2, is_duplicate):
-    q1_tokens = tokenize_data(question1)
-    q2_tokens = tokenize_data(question2)
+    q1_tokens = tokenize_text(question1, maxlen)
+    q2_tokens = tokenize_text(question2, maxlen)
 
     q1_data = pad_tokens(q1_tokens, maxlen)
     q2_data = pad_tokens(q2_tokens, maxlen)

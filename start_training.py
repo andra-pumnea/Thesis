@@ -63,14 +63,25 @@ def run(FLAGS):
     word_index = vocab.prepare_vocab(train_file, embeddings)
 
     # Prepare datasets
-    q1_train, q2_train, y_train, word_embedding_matrix, features_train = preprocessing.prepare_dataset(train_file,
-                                                                                                       maxlen,
-                                                                                                       max_nb_words,
-                                                                                                       experiment,
-                                                                                                       dataset,
-                                                                                                       features,
-                                                                                                       embeddings,
-                                                                                                       init_embeddings)
+    if init_embeddings == 1:
+        q1_train, q2_train, y_train, word_embedding_matrix, features_train = preprocessing.prepare_dataset(train_file,
+                                                                                                           maxlen,
+                                                                                                           max_nb_words,
+                                                                                                           experiment,
+                                                                                                           dataset,
+                                                                                                           features,
+                                                                                                           embeddings,
+                                                                                                           init_embeddings)
+    else:
+        q1_train, q2_train, y_train, features_train = preprocessing.prepare_dataset(train_file,
+                                                                                    maxlen,
+                                                                                    max_nb_words,
+                                                                                    experiment,
+                                                                                    dataset,
+                                                                                    features,
+                                                                                    embeddings,
+                                                                                    init_embeddings)
+
     q1_dev, q2_dev, y_dev, features_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
                                                                         dataset, features)
     q1_test, q2_test, y_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment,
@@ -133,7 +144,7 @@ def run(FLAGS):
     write_misclassified(misclassified)
 
     cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
-                               q1_test, q2_test, y_test, features_test, features)
+                                           q1_test, q2_test, y_test, features_test, features)
     print("Finished running %s model on %s with %s" % (model, experiment, features))
     print_crossval(cvscores)
     print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
