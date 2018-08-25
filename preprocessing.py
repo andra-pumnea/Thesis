@@ -13,6 +13,7 @@ import feature_module
 
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
+FASTTEXT_FILE = '/home/andrada.pumnea/Data/Embeddings/wiki.en.vec'
 EMBEDDING_DIM = 300
 
 nltk.download('stopwords')
@@ -99,9 +100,14 @@ def tokenize_data(question1, question2):
 
 
 # Create embedding index
-def get_embeddings():
+def get_embeddings(embeddings):
     embeddings_index = {}
-    with open(KERAS_DATASETS_DIR + GLOVE_FILE, encoding='utf-8') as f:
+    if embeddings == 'glove':
+        file = KERAS_DATASETS_DIR + GLOVE_FILE
+    else:
+        file = FASTTEXT_FILE
+
+    with open(file, encoding='utf-8') as f:
         for line in f:
             values = line.split(' ')
             word = values[0]
@@ -138,8 +144,8 @@ def pad_sentences(question1_word_sequences, question2_word_sequences, is_duplica
     return q1_data, q2_data, labels
 
 
-def init_embeddings(w_index, max_nb_words, task, experiment):
-    cache_filename = "%s.%s.min.cache.npy" % (task, experiment)
+def init_embeddings(w_index, max_nb_words, task, experiment, embeddings):
+    cache_filename = "%s.%s.%s.min.cache.npy" % (task, experiment, embeddings)
     # cache_filename = "quora.training_full.min.cache.npy"
 
     if exists(cache_filename):
@@ -147,7 +153,7 @@ def init_embeddings(w_index, max_nb_words, task, experiment):
         word_embedding_matrix = word_embedding_matrix[0]
     else:
         # Prepare embedding matrix to be used in Embedding Layer
-        embeddings_index = get_embeddings()
+        embeddings_index = get_embeddings(embeddings)
         word_embedding_matrix = get_embedding_matrix(embeddings_index, w_index, max_nb_words)
         np.save(cache_filename, word_embedding_matrix)
     return word_embedding_matrix
@@ -194,7 +200,7 @@ def prepare_elmo(maxlen, question1, question2, is_duplicate):
 def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embeddings, train=0):
     question1, question2, is_duplicate = read_dataset(filename)
 
-    if embeddings == 'glove':
+    if embeddings != 'elmo':
         q1_data, q2_data, labels, w_index = prepare_glove(maxlen, question1, question2, is_duplicate)
     else:
         q1_data, q2_data, labels = prepare_elmo(maxlen, question1, question2, is_duplicate)
@@ -209,7 +215,7 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
     Q2 = X[:, 1]
 
     if train == 1:
-        word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment)
+        word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
         return Q1, Q2, y, word_embedding_matrix, features
     else:
         return Q1, Q2, y, features
