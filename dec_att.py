@@ -2,7 +2,6 @@ from __future__ import print_function
 from keras.layers import *
 from keras.models import Model
 from keras.optimizers import Adam
-import keras.layers as layers
 import preprocessing
 import model_utils
 import tensorflow as tf

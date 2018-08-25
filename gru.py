@@ -27,7 +27,7 @@ history = History()
 n_hidden = 250
 
 
-def create_model(word_embedding_matrix, embeddings='glove',maxlen=30, lr=1e-3):
+def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-3):
     # The visible layer
     question1 = Input(shape=(maxlen,))
     question2 = Input(shape=(maxlen,))
