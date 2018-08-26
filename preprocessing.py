@@ -110,9 +110,13 @@ def get_embeddings(embeddings):
     with open(file, encoding='utf-8') as f:
         for line in f:
             values = line.split(' ')
-            word = values[0]
-            embedding = np.asarray(values[1:], dtype='float32')
-            embeddings_index[word] = embedding
+            if len(values) > 2:
+                word = values[0]
+                if embeddings != 'glove':
+                    embedding = np.asarray(values[1:-1], dtype='float32')
+                else:
+                    embedding = np.asarray(values[1:], dtype='float32')
+                embeddings_index[word] = embedding
 
     print('Word embeddings: %d' % len(embeddings_index))
     return embeddings_index

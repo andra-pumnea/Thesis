@@ -58,7 +58,7 @@ def run(FLAGS):
     experiment = FLAGS.experiment
     dataset = FLAGS.task
     features = FLAGS.features
-    init_embeddings = 0
+    init_embeddings = 1
 
     word_index = vocab.prepare_vocab(train_file, embeddings)
 
@@ -144,12 +144,12 @@ def run(FLAGS):
     misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     write_misclassified(misclassified)
 
-    cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
-                                           q1_test, q2_test, y_test, features_test, features)
+    # cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
+    #                                        q1_test, q2_test, y_test, features_test, features)
     print("Finished running %s model on %s with %s" % (model, experiment, features))
-    print_crossval(cvscores)
-    print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
-    print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
+    # print_crossval(cvscores)
+    # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
+    # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, features_test)
     print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 

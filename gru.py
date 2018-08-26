@@ -35,13 +35,12 @@ history = History()
 n_hidden = 250
 
 
-def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-6):
+def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-5):
     # The visible layer
-    question1 = Input(shape=(maxlen,), dtype=tf.string)
-    question2 = Input(shape=(maxlen,), dtype=tf.string)
-
     if embeddings != 'elmo':
-        print(word_embedding_matrix)
+        question1 = Input(shape=(maxlen,))
+        question2 = Input(shape=(maxlen,))
+
         in_dim, out_dim = word_embedding_matrix.shape
         embedding_layer = Embedding(in_dim,
                                     out_dim,
@@ -52,6 +51,8 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-6):
         encoded_q1 = embedding_layer(question1)
         encoded_q2 = embedding_layer(question2)
     else:
+        question1 = Input(shape=(maxlen,), dtype="string")
+        question2 = Input(shape=(maxlen,), dtype="string")
         encoded_q1 = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(question1)
         encoded_q2 = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(question2)
 
