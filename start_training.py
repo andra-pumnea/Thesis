@@ -59,7 +59,7 @@ def run(FLAGS):
     dataset = FLAGS.task
     features = FLAGS.features
 
-    if embeddings == 'elmo' or embeddings == 'univ_sent':
+    if embeddings == 'elmo':
         init_embeddings = 0
     else:
         init_embeddings = 1

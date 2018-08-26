@@ -205,7 +205,7 @@ def prepare_elmo(maxlen, question1, question2, is_duplicate):
 def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embeddings, train=0):
     question1, question2, is_duplicate = read_dataset(filename)
 
-    if embeddings != 'elmo' or embeddings != 'univ_sent':
+    if embeddings != 'elmo' or embeddings:
         q1_data, q2_data, labels, w_index = prepare_glove(maxlen, question1, question2, is_duplicate)
     else:
         q1_data, q2_data, labels = prepare_elmo(maxlen, question1, question2, is_duplicate)

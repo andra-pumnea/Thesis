@@ -11,7 +11,6 @@ from keras import backend as K
 sess = tf.Session()
 K.set_session(sess)
 
-univ_model = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/2")
 elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
 
 sess.run(tf.global_variables_initializer())
@@ -20,16 +19,6 @@ sess.run(tf.tables_initializer())
 
 batch_size = 50
 max_len = 40
-
-
-def UniversalEmbedding(x):
-    return univ_model(inputs={
-        "tokens": tf.squeeze(tf.cast(x, tf.string)),
-        "sequence_len": tf.constant(batch_size * [max_len])
-    },
-        signature="tokens",
-        as_dict=True)["univ"]
-
 
 def ElmoEmbedding(x):
     return elmo_model(inputs={
@@ -48,7 +37,7 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
                  lr=1e-3, activation='elu'):
     # Based on: https://arxiv.org/abs/1606.01933
 
-    if embeddings != 'elmo' and embeddings != 'univ_sent':
+    if embeddings != 'elmo':
         q1 = Input(name='q1', shape=(maxlen,))
         q2 = Input(name='q2', shape=(maxlen,))
         # Embedding
@@ -59,12 +48,8 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
     else:
         q1 = Input(shape=(maxlen,), dtype="string")
         q2 = Input(shape=(maxlen,), dtype="string")
-        if embeddings == 'elmo':
-            q1_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q1)
-            q2_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q2)
-        else:
-            q1_embed = Lambda(UniversalEmbedding, output_shape=(maxlen, 512))(q1)
-            q2_embed = Lambda(UniversalEmbedding, output_shape=(maxlen, 512))(q2)
+        q1_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q1)
+        q2_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q2)
 
     # Projection
     projection_layers = []
