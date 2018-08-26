@@ -18,7 +18,7 @@ elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
 sess.run(tf.global_variables_initializer())
 sess.run(tf.tables_initializer())
 
-batch_size = 32
+batch_size = 50
 max_len = 40
 
 
@@ -35,13 +35,13 @@ history = History()
 n_hidden = 250
 
 
-def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-3):
+def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-6):
     # The visible layer
     question1 = Input(shape=(maxlen,), dtype=tf.string)
     question2 = Input(shape=(maxlen,), dtype=tf.string)
 
-    if embeddings == 'glove':
-        print(word_embedding_matrix.shape)
+    if embeddings != 'elmo':
+        print(word_embedding_matrix)
         in_dim, out_dim = word_embedding_matrix.shape
         embedding_layer = Embedding(in_dim,
                                     out_dim,
