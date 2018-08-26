@@ -4,23 +4,56 @@ from keras.models import Model
 from keras.optimizers import Adam
 import preprocessing
 import model_utils
+import tensorflow as tf
+import tensorflow_hub as hub
+from keras import backend as K
+
+sess = tf.Session()
+K.set_session(sess)
+
+elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
+sess.run(tf.global_variables_initializer())
+sess.run(tf.tables_initializer())
+
+batch_size = 50
+max_len = 40
+
+
+def ElmoEmbedding(x):
+    return elmo_model(inputs={
+        "tokens": tf.squeeze(tf.cast(x, tf.string)),
+        "sequence_len": tf.constant(batch_size * [max_len])
+    },
+        signature="tokens",
+        as_dict=True)["elmo"]
 
 
 # https://www.kaggle.com/lamdang/dl-models
 def create_model(pretrained_embedding,
                  maxlen=30,
+                 embeddings = 'glove',
                  lstm_dim=300,
                  dense_dim=300,
                  dense_dropout=0.5):
     # Based on arXiv:1609.06038
-    q1 = Input(name='q1', shape=(maxlen,))
-    q2 = Input(name='q2', shape=(maxlen,))
 
-    # Embedding
-    embedding = model_utils.create_pretrained_embedding(pretrained_embedding, mask_zero=False)
-    bn = BatchNormalization(axis=2)
-    q1_embed = bn(embedding(q1))
-    q2_embed = bn(embedding(q2))
+    if embeddings != 'elmo':
+        q1 = Input(name='q1', shape=(maxlen,))
+        q2 = Input(name='q2', shape=(maxlen,))
+        # Embedding
+        embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
+                                                            mask_zero=False)
+        bn = BatchNormalization(axis=2)
+        q1_embed = bn(embedding(q1))
+        q2_embed = bn(embedding(q2))
+
+    else:
+        q1 = Input(shape=(maxlen,), dtype="string")
+        q2 = Input(shape=(maxlen,), dtype="string")
+
+        bn = BatchNormalization(axis=2)
+        q1_embed = bn(Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q1))
+        q2_embed = bn(Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q2))
 
     # Encode
     encode = Bidirectional(LSTM(lstm_dim, return_sequences=True))

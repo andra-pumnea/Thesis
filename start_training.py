@@ -167,7 +167,7 @@ def create_model(word_embedding_matrix):
     elif model == "esim" and features == 'features':
         net = esim_features.create_model(word_embedding_matrix, maxlen)
     elif model == "esim" and features != 'features':
-        net = esim.create_model(word_embedding_matrix, maxlen)
+        net = esim.create_model(word_embedding_matrix, maxlen, embeddings)
     elif model == "gru" and features == 'features':
         net = gru_features.create_model(word_embedding_matrix, maxlen)
     elif model == "gru" and features != 'features':

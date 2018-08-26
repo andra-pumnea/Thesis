@@ -16,7 +16,7 @@ sess.run(tf.global_variables_initializer())
 sess.run(tf.tables_initializer())
 
 
-batch_size = 32
+batch_size = 50
 max_len = 40
 
 
@@ -37,7 +37,7 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
                  lr=1e-3, activation='elu'):
     # Based on: https://arxiv.org/abs/1606.01933
 
-    if embeddings == 'glove':
+    if embeddings != 'elmo':
         q1 = Input(name='q1', shape=(maxlen,))
         q2 = Input(name='q2', shape=(maxlen,))
         # Embedding
@@ -48,8 +48,8 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
     else:
         q1 = Input(shape=(maxlen,), dtype="string")
         q2 = Input(shape=(maxlen,), dtype="string")
-        q1_embed = Lambda(ElmoEmbedding, output_shape=(1024,))(q1)
-        q2_embed = Lambda(ElmoEmbedding, output_shape=(1024,))(q2)
+        q1_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q1)
+        q2_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q2)
 
     # Projection
     projection_layers = []
