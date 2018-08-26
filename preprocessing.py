@@ -191,6 +191,7 @@ def prepare_glove(maxlen, question1, question2, is_duplicate):
     return q1_data, q2_data, labels, w_index
 
 
+#   elmo embeddings require strings not ints
 def prepare_elmo(maxlen, question1, question2, is_duplicate):
     q1_tokens = tokenize_text(question1, maxlen)
     q2_tokens = tokenize_text(question2, maxlen)
