@@ -98,7 +98,7 @@ def run(FLAGS):
     # plot_model(net, to_file=plot_file, show_shapes=True, show_layer_names=True)
     net.summary()
 
-    filepath = "models/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, features)
+    filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, features, embeddings)
     # filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
     if mode == "load":
         print("Loading weights from %s" % filepath)
@@ -141,8 +141,8 @@ def run(FLAGS):
     get_confusion_matrix(net, q1_test, q2_test, y_test, features_test)
     # get_intermediate_layer(net)
 
-    misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
-    write_misclassified(misclassified)
+    # misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
+    # write_misclassified(misclassified)
 
     # cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
     #                                        q1_test, q2_test, y_test, features_test, features)
@@ -277,7 +277,7 @@ def plot_acc_curve(history):
 
 def get_callbacks(filename):
     callbacks = [ModelCheckpoint(filename, monitor='val_loss', save_best_only=True, mode='min'),
-                 EarlyStopping(monitor='val_loss', patience=5)]
+                 EarlyStopping(monitor='val_loss', patience=3)]
     return callbacks
 
 

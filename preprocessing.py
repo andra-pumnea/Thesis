@@ -14,6 +14,7 @@ import feature_module
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
 FASTTEXT_FILE = '/home/andrada.pumnea/Data/Embeddings/wiki.en.vec'
+#FASTTEXT_FILE = '/home/andrada.pumnea/Data/Embeddings/wiki-news-300d-1M-subword.vec'
 EMBEDDING_DIM = 300
 
 nltk.download('stopwords')
@@ -149,8 +150,7 @@ def pad_sentences(question1_word_sequences, question2_word_sequences, is_duplica
 
 
 def init_embeddings(w_index, max_nb_words, task, experiment, embeddings):
-    cache_filename = "%s.%s.%s.min.cache.npy" % (task, experiment, embeddings)
-    # cache_filename = "quora.training_full.min.cache.npy"
+    cache_filename = "embedding_matrix/%s.%s.%s.min.cache.npy" % (task, experiment, embeddings)
 
     if exists(cache_filename):
         word_embedding_matrix = np.load(cache_filename)

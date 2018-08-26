@@ -37,16 +37,17 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
                  lr=1e-3, activation='elu'):
     # Based on: https://arxiv.org/abs/1606.01933
 
-    q1 = Input(name='q1', shape=(maxlen,))
-    q2 = Input(name='q2', shape=(maxlen,))
-
     if embeddings == 'glove':
+        q1 = Input(name='q1', shape=(maxlen,))
+        q2 = Input(name='q2', shape=(maxlen,))
         # Embedding
         embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
                                                             mask_zero=False)
         q1_embed = embedding(q1)
         q2_embed = embedding(q2)
     else:
+        q1 = Input(shape=(maxlen,), dtype="string")
+        q2 = Input(shape=(maxlen,), dtype="string")
         q1_embed = Lambda(ElmoEmbedding, output_shape=(1024,))(q1)
         q2_embed = Lambda(ElmoEmbedding, output_shape=(1024,))(q2)
 
