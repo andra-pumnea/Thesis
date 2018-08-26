@@ -48,7 +48,7 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
                  lr=1e-3, activation='elu'):
     # Based on: https://arxiv.org/abs/1606.01933
 
-    if embeddings != 'elmo':
+    if embeddings != 'elmo' and embeddings != 'univ_sent':
         q1 = Input(name='q1', shape=(maxlen,))
         q2 = Input(name='q2', shape=(maxlen,))
         # Embedding
