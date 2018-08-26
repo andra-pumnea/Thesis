@@ -58,7 +58,11 @@ def run(FLAGS):
     experiment = FLAGS.experiment
     dataset = FLAGS.task
     features = FLAGS.features
-    init_embeddings = 1
+
+    if embeddings == 'elmo':
+        init_embeddings = 0
+    else:
+        init_embeddings = 1
 
     word_index = vocab.prepare_vocab(train_file, embeddings)
 
