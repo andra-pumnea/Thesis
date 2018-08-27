@@ -6,16 +6,9 @@ import preprocessing
 import model_utils
 import tensorflow as tf
 import tensorflow_hub as hub
-from keras import backend as K
-
-sess = tf.Session()
-K.set_session(sess)
 
 univ_model = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/2")
 elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
-
-sess.run(tf.global_variables_initializer())
-sess.run(tf.tables_initializer())
 
 batch_size = 50
 max_len = 40

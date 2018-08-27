@@ -115,12 +115,16 @@ def run(FLAGS):
         t0 = time.time()
         callbacks = get_callbacks(filepath)
         if not features_train.size and not features_dev.size:
-            history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
-                              validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
-                              batch_size=FLAGS.batch_size,
-                              nb_epoch=FLAGS.max_epochs,
-                              shuffle=False,
-                              callbacks=callbacks)
+            with tf.Session() as session:
+                K.set_session(session)
+                session.run(tf.global_variables_initializer())
+                session.run(tf.tables_initializer())
+                history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
+                                  validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
+                                  batch_size=FLAGS.batch_size,
+                                  nb_epoch=FLAGS.max_epochs,
+                                  shuffle=False,
+                                  callbacks=callbacks)
         else:
             history = net.fit([q1_train, q2_train, features_train], y_train,
                               validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev, features_dev], y_dev),
