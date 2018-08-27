@@ -208,11 +208,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, f
     model.load_weights(filepath)
 
     if not features.size:
-        with tf.Session() as session:
-            K.set_session(session)
-            session.run(tf.global_variables_initializer())
-            session.run(tf.tables_initializer())
-            scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
+        scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
     else:
         scores = model.evaluate([q1_test, q2_test, features], y_test, verbose=0)
     loss = scores[1]
@@ -260,10 +256,6 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, features):
 
 def get_predictions(model, q1_test, q2_test, raw1_test, raw2_test, features):
     if not features.size:
-        with tf.Session() as session:
-            K.set_session(session)
-            session.run(tf.global_variables_initializer())
-            session.run(tf.tables_initializer())
             y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
     else:
         y_pred = model.predict([q1_test, q2_test, features])
