@@ -218,12 +218,15 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
 
     Q1 = X[:, 0]
     Q2 = X[:, 1]
+    
+    q1_raw = np.array(question1, dtype='object')[:, np.newaxis]
+    q2_raw = np.array(question2, dtype='object')[:, np.newaxis]
 
     if train == 1:
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
-        return Q1, Q2, y, np.array(question1), np.array(question2), word_embedding_matrix, features
+        return Q1, Q2, y, q1_raw, q2_raw, word_embedding_matrix, features
     else:
-        return Q1, Q2, y, np.array(question1), np.array(question2), features
+        return Q1, Q2, y, q1_raw, q2_raw, features
 
 
 def get_filename(path):
