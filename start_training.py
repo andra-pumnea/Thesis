@@ -146,7 +146,7 @@ def run(FLAGS):
     else:
         print("------------Unknown mode------------")
 
-    get_confusion_matrix(net, q1_test, q2_test, y_test, features_test)
+    get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test, features_test)
     # get_intermediate_layer(net)
 
     # misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
@@ -208,7 +208,11 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, f
     model.load_weights(filepath)
 
     if not features.size:
-        scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
+        with tf.Session() as session:
+            K.set_session(session)
+            session.run(tf.global_variables_initializer())
+            session.run(tf.tables_initializer())
+            scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
     else:
         scores = model.evaluate([q1_test, q2_test, features], y_test, verbose=0)
     loss = scores[1]
@@ -218,8 +222,8 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, f
     return loss, accuracy, f1_score
 
 
-def get_confusion_matrix(model, q1_test, q2_test, y_test, features):
-    y_pred = get_predictions(model, q1_test, q2_test, features)
+def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test, features):
+    y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test, features)
 
     print("Confusion matrix:")
     print(confusion_matrix(y_test, y_pred))
@@ -254,9 +258,13 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, features):
     return misclassified_q
 
 
-def get_predictions(model, q1_test, q2_test, features):
+def get_predictions(model, q1_test, q2_test, raw1_test, raw2_test, features):
     if not features.size:
-        y_pred = model.predict([q1_test, q2_test], batch_size=FLAGS.batch_size)
+        with tf.Session() as session:
+            K.set_session(session)
+            session.run(tf.global_variables_initializer())
+            session.run(tf.tables_initializer())
+            y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
     else:
         y_pred = model.predict([q1_test, q2_test, features])
     y_pred = (y_pred > 0.5)
