@@ -42,21 +42,23 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed
                  lr=1e-3, activation='elu'):
     # Based on: https://arxiv.org/abs/1606.01933
 
-    q1 = Input(name='q1', shape=(maxlen,))
-    q2 = Input(name='q2', shape=(maxlen,))
-    q1_sent = Input(name='q1_sent', shape=(1,))
-    q2_sent = Input(name='q2_sent', shape=(1,))
-
     if embeddings != 'elmo' and embeddings != 'univ_sent':
         # Embedding
+
+        q1 = Input(name='q1', shape=(maxlen,))
+        q2 = Input(name='q2', shape=(maxlen,))
         embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
                                                             mask_zero=False)
         q1_embed = embedding(q1)
         q2_embed = embedding(q2)
     else:
+        q1 = Input(shape=(maxlen,), dtype="string")
+        q2 = Input(shape=(maxlen,), dtype="string")
         q1_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q1)
         q2_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q2)
 
+    q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
+    q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
     q1_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q1_sent)
     q2_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q2_sent)
 
