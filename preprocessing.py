@@ -210,24 +210,35 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
     else:
         q1_data, q2_data, labels = prepare_elmo(maxlen, question1, question2, is_duplicate)
 
-    file = get_filename(filename)
-    features = handle_features(question1, question2, feat, task, experiment, file)
+    # file = get_filename(filename)
+    # features = handle_features(question1, question2, feat, task, experiment, file)
 
     X = np.stack((q1_data, q2_data), axis=1)
     y = labels
 
     Q1 = X[:, 0]
     Q2 = X[:, 1]
-
-    q1_raw = np.array(question1, dtype='object')[:, np.newaxis]
-    q2_raw = np.array(question2, dtype='object')[:, np.newaxis]
+    q1_raw, q2_raw = prepare_sentence_enc(question1, question2)
 
     if train == 1:
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
-        return Q1, Q2, y, q1_raw, q2_raw, word_embedding_matrix, features
+        return Q1, Q2, y, q1_raw, q2_raw, word_embedding_matrix
     else:
-        return Q1, Q2, y, q1_raw, q2_raw, features
+        return Q1, Q2, y, q1_raw, q2_raw
 
+
+def prepare_sentence_enc(question1, question2):
+    q1_pre = []
+    q2_pre = []
+    for question1, question2 in zip(question1, question2):
+        q1 = re.sub('[^A-Za-z0-9 ,\?\'\"-._\+\!/\`@=;:]+', '', question1)
+        q2 = re.sub('[^A-Za-z0-9 ,\?\'\"-._\+\!/\`@=;:]+', '', question2)
+        q1_pre.append(q1)
+        q2_pre.append(q2)
+
+    q1_raw = np.array(q1_pre, dtype='object')[:, np.newaxis]
+    q2_raw = np.array(q2_pre, dtype='object')[:, np.newaxis]
+    return q1_raw, q2_raw
 
 def get_filename(path):
     split_file = path.rsplit('/', 1)
