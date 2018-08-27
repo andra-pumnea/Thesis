@@ -11,14 +11,19 @@ from keras import backend as K
 sess = tf.Session()
 K.set_session(sess)
 
+univ_model = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/2")
 elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
 
 sess.run(tf.global_variables_initializer())
 sess.run(tf.tables_initializer())
 
-
 batch_size = 50
 max_len = 40
+
+
+def UniversalEmbedding(x):
+    return univ_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
+
 
 def ElmoEmbedding(x):
     return elmo_model(inputs={
@@ -30,26 +35,30 @@ def ElmoEmbedding(x):
 
 
 # https://www.kaggle.com/lamdang/dl-models
-def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
+def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed='univ_sent',
                  projection_dim=300, projection_hidden=0, projection_dropout=0.2,
                  compare_dim=500, compare_dropout=0.2,
                  dense_dim=300, dense_dropout=0.2,
                  lr=1e-3, activation='elu'):
     # Based on: https://arxiv.org/abs/1606.01933
 
-    if embeddings != 'elmo':
-        q1 = Input(name='q1', shape=(maxlen,))
-        q2 = Input(name='q2', shape=(maxlen,))
+    q1 = Input(name='q1', shape=(maxlen,))
+    q2 = Input(name='q2', shape=(maxlen,))
+    q1_sent = Input(name='q1_sent', shape=(1,))
+    q2_sent = Input(name='q2_sent', shape=(1,))
+
+    if embeddings != 'elmo' and embeddings != 'univ_sent':
         # Embedding
         embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
                                                             mask_zero=False)
         q1_embed = embedding(q1)
         q2_embed = embedding(q2)
     else:
-        q1 = Input(shape=(maxlen,), dtype="string")
-        q2 = Input(shape=(maxlen,), dtype="string")
         q1_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q1)
         q2_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q2)
+
+    q1_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q1_sent)
+    q2_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q2_sent)
 
     # Projection
     projection_layers = []
@@ -85,7 +94,7 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove',
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep])
+    merged = Concatenate()([q1_rep, q2_rep, q1_embed_sent, q2_embed_sent])
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation=activation)(dense)
     dense = Dropout(dense_dropout)(dense)

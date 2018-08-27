@@ -59,7 +59,7 @@ def run(FLAGS):
     dataset = FLAGS.task
     features = FLAGS.features
 
-    if embeddings == 'elmo':
+    if embeddings == 'elmo' or embeddings == 'univ_sent':
         init_embeddings = 0
     else:
         init_embeddings = 1
@@ -68,7 +68,7 @@ def run(FLAGS):
 
     # Prepare datasets
     if init_embeddings == 1:
-        q1_train, q2_train, y_train, word_embedding_matrix, features_train = preprocessing.prepare_dataset(train_file,
+        q1_train, q2_train, y_train, raw1_train, raw2_train, word_embedding_matrix, features_train = preprocessing.prepare_dataset(train_file,
                                                                                                            maxlen,
                                                                                                            max_nb_words,
                                                                                                            experiment,
@@ -77,7 +77,7 @@ def run(FLAGS):
                                                                                                            embeddings,
                                                                                                            init_embeddings)
     else:
-        q1_train, q2_train, y_train, features_train = preprocessing.prepare_dataset(train_file,
+        q1_train, q2_train, y_train, raw1_train, raw2_train, features_train = preprocessing.prepare_dataset(train_file,
                                                                                     maxlen,
                                                                                     max_nb_words,
                                                                                     experiment,
@@ -87,9 +87,9 @@ def run(FLAGS):
                                                                                     init_embeddings)
         word_embedding_matrix = np.zeros(1)
 
-    q1_dev, q2_dev, y_dev, features_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
+    q1_dev, q2_dev, y_dev, raw1_dev, raw2_dev, features_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
                                                                         dataset, features, embeddings)
-    q1_test, q2_test, y_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment,
+    q1_test, q2_test, y_test, raw1_test, raw2_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment,
                                                                             dataset, features, embeddings)
 
     if dataset == 'snli':
@@ -115,15 +115,15 @@ def run(FLAGS):
         t0 = time.time()
         callbacks = get_callbacks(filepath)
         if not features_train.size and not features_dev.size:
-            history = net.fit([q1_train, q2_train], y_train,
-                              validation_data=([q1_dev, q2_dev], y_dev),
+            history = net.fit([q1_train, q2_train, raw1_train, raw2_train,], y_train,
+                              validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
                               shuffle=False,
                               callbacks=callbacks)
         else:
             history = net.fit([q1_train, q2_train, features_train], y_train,
-                              validation_data=([q1_dev, q2_dev, features_dev], y_dev),
+                              validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,features_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
                               shuffle=False,

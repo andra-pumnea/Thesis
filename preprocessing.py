@@ -205,7 +205,7 @@ def prepare_elmo(maxlen, question1, question2, is_duplicate):
 def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embeddings, train=0):
     question1, question2, is_duplicate = read_dataset(filename)
 
-    if embeddings != 'elmo' or embeddings:
+    if embeddings != 'elmo' or embeddings!= 'univ_sent':
         q1_data, q2_data, labels, w_index = prepare_glove(maxlen, question1, question2, is_duplicate)
     else:
         q1_data, q2_data, labels = prepare_elmo(maxlen, question1, question2, is_duplicate)
@@ -221,9 +221,9 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
 
     if train == 1:
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
-        return Q1, Q2, y, word_embedding_matrix, features
+        return Q1, Q2, y, np.array(question1), np.array(question2), word_embedding_matrix, features
     else:
-        return Q1, Q2, y, features
+        return Q1, Q2, y, np.array(question1), np.array(question2), features
 
 
 def get_filename(path):
