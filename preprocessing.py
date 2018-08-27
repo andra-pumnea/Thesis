@@ -210,8 +210,8 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
     else:
         q1_data, q2_data, labels = prepare_elmo(maxlen, question1, question2, is_duplicate)
 
-    # file = get_filename(filename)
-    # features = handle_features(question1, question2, feat, task, experiment, file)
+    file = get_filename(filename)
+    features = handle_features(question1, question2, feat, task, experiment, file)
 
     X = np.stack((q1_data, q2_data), axis=1)
     y = labels
@@ -222,9 +222,9 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
 
     if train == 1:
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
-        return Q1, Q2, y, q1_raw, q2_raw, word_embedding_matrix
+        return Q1, Q2, y, q1_raw, q2_raw, word_embedding_matrix, features
     else:
-        return Q1, Q2, y, q1_raw, q2_raw
+        return Q1, Q2, y, q1_raw, q2_raw, features
 
 
 def prepare_sentence_enc(question1, question2):
