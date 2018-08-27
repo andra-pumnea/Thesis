@@ -218,7 +218,7 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
 
     Q1 = X[:, 0]
     Q2 = X[:, 1]
-    
+
     q1_raw = np.array(question1, dtype='object')[:, np.newaxis]
     q2_raw = np.array(question2, dtype='object')[:, np.newaxis]
 
