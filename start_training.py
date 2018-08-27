@@ -115,7 +115,7 @@ def run(FLAGS):
         t0 = time.time()
         callbacks = get_callbacks(filepath)
         if not features_train.size and not features_dev.size:
-            history = net.fit([q1_train, q2_train, raw1_train, raw2_train,], y_train,
+            history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
                               validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
@@ -123,7 +123,7 @@ def run(FLAGS):
                               callbacks=callbacks)
         else:
             history = net.fit([q1_train, q2_train, features_train], y_train,
-                              validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,features_dev], y_dev),
+                              validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev, features_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
                               shuffle=False,
@@ -154,7 +154,7 @@ def run(FLAGS):
     # print_crossval(cvscores)
     # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
-    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, filepath, features_test)
+    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath, features_test)
     print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 
 
@@ -200,11 +200,11 @@ def get_best(history):
     return max_val_acc, idx
 
 
-def evaluate_best_model(model, q1_test, q2_test, y_test, filepath, features):
+def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath, features):
     model.load_weights(filepath)
 
     if not features.size:
-        scores = model.evaluate([q1_test, q2_test], y_test, verbose=0, batch_size=50)
+        scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
     else:
         scores = model.evaluate([q1_test, q2_test, features], y_test, verbose=0)
     loss = scores[1]
