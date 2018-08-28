@@ -56,6 +56,8 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed
     q2_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q2_sent)
     sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
     sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
+    distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
+        [sent1_dense, sent2_dense])
 
     # Projection
     projection_layers = []
@@ -91,7 +93,7 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep, sent1_dense, sent2_dense])
+    merged = Concatenate()([q1_rep, q2_rep, distance])
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation=activation)(dense)
     dense = Dropout(dense_dropout)(dense)
