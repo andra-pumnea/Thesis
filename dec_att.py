@@ -4,27 +4,6 @@ from keras.models import Model
 from keras.optimizers import Adam
 import preprocessing
 import model_utils
-import tensorflow as tf
-import tensorflow_hub as hub
-
-univ_model = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/2")
-elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
-
-batch_size = 50
-max_len = 40
-
-
-def UniversalEmbedding(x):
-    return univ_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
-
-
-def ElmoEmbedding(x):
-    return elmo_model(inputs={
-        "tokens": tf.squeeze(tf.cast(x, tf.string)),
-        "sequence_len": tf.constant(batch_size * [max_len])
-    },
-        signature="tokens",
-        as_dict=True)["elmo"]
 
 
 # https://www.kaggle.com/lamdang/dl-models
@@ -47,13 +26,13 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed
     else:
         q1 = Input(shape=(maxlen,), dtype="string")
         q2 = Input(shape=(maxlen,), dtype="string")
-        q1_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q1)
-        q2_embed = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q2)
+        q1_embed = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(q1)
+        q2_embed = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(q2)
 
     q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
     q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
-    q1_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q1_sent)
-    q2_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q2_sent)
+    q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(q1_sent)
+    q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(q2_sent)
     sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
     sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
     distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(

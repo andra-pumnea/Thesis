@@ -1,6 +1,26 @@
 from __future__ import print_function
 from keras.layers import *
 from keras.activations import softmax
+import tensorflow as tf
+import tensorflow_hub as hub
+
+batch_size = 50
+max_len = 40
+univ_model = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/2")
+elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
+
+
+def UniversalEmbedding(x):
+    return univ_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
+
+
+def ElmoEmbedding(x):
+    return elmo_model(inputs={
+        "tokens": tf.squeeze(tf.cast(x, tf.string)),
+        "sequence_len": tf.constant(batch_size * [max_len])
+    },
+        signature="tokens",
+        as_dict=True)["elmo"]
 
 
 def create_pretrained_embedding(pretrained_weights, trainable=False, **kwargs):
