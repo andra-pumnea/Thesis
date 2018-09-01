@@ -79,7 +79,7 @@ def run(FLAGS):
                                                                                                            embeddings,
                                                                                                            init_embeddings)
     else:
-        q1_train, q2_train, y_train, qid_test, raw1_train, raw2_train, features_train = preprocessing.prepare_dataset(train_file,
+        q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train, features_train = preprocessing.prepare_dataset(train_file,
                                                                                     maxlen,
                                                                                     max_nb_words,
                                                                                     experiment,
@@ -89,9 +89,9 @@ def run(FLAGS):
                                                                                     init_embeddings)
         word_embedding_matrix = np.zeros(1)
 
-    q1_dev, q2_dev, y_dev, raw1_dev, raw2_dev, features_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
+    q1_dev, q2_dev, y_dev, qid_dev, raw1_dev, raw2_dev, features_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
                                                                         dataset, features, embeddings)
-    q1_test, q2_test, y_test, raw1_test, raw2_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment,
+    q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test, features_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment,
                                                                             dataset, features, embeddings)
 
     if dataset == 'snli':
