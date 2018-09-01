@@ -74,15 +74,17 @@ def read_dataset(file):
     question1 = []
     question2 = []
     is_duplicate = []
+    qid = []
     with open(file, encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
         for row in reader:
             question1.append(text_to_wordlist(row[1]))
             question2.append(text_to_wordlist(row[2]))
             is_duplicate.append(row[0])
+            qid.append(row[3])
     print('Question pairs from %s: %d' % (file, len(question1)))
 
-    return question1, question2, is_duplicate
+    return question1, question2, is_duplicate, qid
 
 
 def tokenize_data(question1, question2):
@@ -203,7 +205,7 @@ def prepare_elmo(maxlen, question1, question2, is_duplicate):
 
 
 def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embeddings, train=0):
-    question1, question2, is_duplicate = read_dataset(filename)
+    question1, question2, is_duplicate, qid = read_dataset(filename)
 
     if embeddings != 'elmo' or embeddings!= 'univ_sent':
         q1_data, q2_data, labels, w_index = prepare_glove(maxlen, question1, question2, is_duplicate)
@@ -222,9 +224,9 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
 
     if train == 1:
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
-        return Q1, Q2, y, q1_raw, q2_raw, word_embedding_matrix, features
+        return Q1, Q2, y, qid, q1_raw, q2_raw, word_embedding_matrix, features
     else:
-        return Q1, Q2, y, q1_raw, q2_raw, features
+        return Q1, Q2, y, qid, q1_raw, q2_raw, features
 
 
 def prepare_sentence_enc(question1, question2):
@@ -239,6 +241,7 @@ def prepare_sentence_enc(question1, question2):
     q1_raw = np.array(q1_pre, dtype='object')[:, np.newaxis]
     q2_raw = np.array(q2_pre, dtype='object')[:, np.newaxis]
     return q1_raw, q2_raw
+
 
 def get_filename(path):
     split_file = path.rsplit('/', 1)

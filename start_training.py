@@ -70,7 +70,7 @@ def run(FLAGS):
 
     # Prepare datasets
     if init_embeddings == 1:
-        q1_train, q2_train, y_train, raw1_train, raw2_train, word_embedding_matrix, features_train = preprocessing.prepare_dataset(train_file,
+        q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train, word_embedding_matrix, features_train = preprocessing.prepare_dataset(train_file,
                                                                                                            maxlen,
                                                                                                            max_nb_words,
                                                                                                            experiment,
@@ -79,7 +79,7 @@ def run(FLAGS):
                                                                                                            embeddings,
                                                                                                            init_embeddings)
     else:
-        q1_train, q2_train, y_train, raw1_train, raw2_train, features_train = preprocessing.prepare_dataset(train_file,
+        q1_train, q2_train, y_train, qid_test, raw1_train, raw2_train, features_train = preprocessing.prepare_dataset(train_file,
                                                                                     maxlen,
                                                                                     max_nb_words,
                                                                                     experiment,
@@ -149,6 +149,9 @@ def run(FLAGS):
 
     # misclassified = get_misclassified_q(net, q1_test, q2_test, y_test, word_index, features_test)
     # write_misclassified(misclassified)
+
+    predictions = find_prediction_probability(net, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test)
+    write_predictions(predictions)
 
     # cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train, features_train,
     #                                        q1_test, q2_test, y_test, features_test, features)
@@ -252,9 +255,19 @@ def get_misclassified_q(model, q1_test, q2_test, y_test, word_index, features):
     return misclassified_q
 
 
+def find_prediction_probability(model, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test):
+    y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
+
+    question_pred = []
+    for i in enumerate(q1_test):
+        pair = [qid_test[i], y_test[i], y_pred[i]]
+        question_pred.append(pair)
+    return question_pred
+
+
 def get_predictions(model, q1_test, q2_test, raw1_test, raw2_test, features):
     if not features.size:
-            y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
+        y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
     else:
         y_pred = model.predict([q1_test, q2_test, features])
     y_pred = (y_pred > 0.5)
@@ -262,6 +275,14 @@ def get_predictions(model, q1_test, q2_test, raw1_test, raw2_test, features):
     y_pred = y_pred.astype(int)
 
     return y_pred
+
+
+def write_predictions(question_pred):
+    output_file = "errors/predictions.%s.%s.%s.%s.tsv" % (FLAGS.task, FLAGS.model, FLAGS.experiment, FLAGS.features)
+    with open(output_file, 'w+') as f:
+        for pair in question_pred:
+            f.writelines(str(pair[0]) + '\t' + str(pair[1]) + '\t' + str(pair[2]) + '\n')
+    print("Finished writing questions ids and their predictions")
 
 
 def write_misclassified(misclassified_q):
