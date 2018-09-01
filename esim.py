@@ -6,18 +6,15 @@ import preprocessing
 import model_utils
 import tensorflow as tf
 import tensorflow_hub as hub
-from keras import backend as K
 
-sess = tf.Session()
-K.set_session(sess)
-
+univ_model = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/2")
 elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
-sess.run(tf.global_variables_initializer())
-sess.run(tf.tables_initializer())
 
 batch_size = 50
 max_len = 40
 
+def UniversalEmbedding(x):
+    return univ_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
 
 def ElmoEmbedding(x):
     return elmo_model(inputs={
@@ -55,6 +52,15 @@ def create_model(pretrained_embedding,
         q1_embed = bn(Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q1))
         q2_embed = bn(Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(q2))
 
+    q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
+    q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
+    q1_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q1_sent)
+    q2_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q2_sent)
+    sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
+    sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
+    distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
+        [sent1_dense, sent2_dense])
+
     # Encode
     encode = Bidirectional(LSTM(lstm_dim, return_sequences=True))
     q1_encoded = encode(q1_embed)
@@ -76,7 +82,7 @@ def create_model(pretrained_embedding,
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep])
+    merged = Concatenate()([q1_rep, q2_rep, distance])
 
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation='elu')(dense)
@@ -88,7 +94,7 @@ def create_model(pretrained_embedding,
     # out_ = Dense(3, activation='sigmoid')(dense)
     out_ = Dense(1, activation='sigmoid')(dense)
 
-    model = Model(inputs=[q1, q2], outputs=out_)
+    model = Model(inputs=[q1, q2, q1_sent, q2_sent], outputs=out_)
     model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
                   metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     return model
