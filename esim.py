@@ -42,15 +42,6 @@ def create_model(pretrained_embedding,
     distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
 
-    q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
-    q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
-    q1_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q1_sent)
-    q2_embed_sent = Lambda(UniversalEmbedding, output_shape=(512,))(q2_sent)
-    sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
-    sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
-    distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
-        [sent1_dense, sent2_dense])
-
     # Encode
     encode = Bidirectional(LSTM(lstm_dim, return_sequences=True))
     q1_encoded = encode(q1_embed)

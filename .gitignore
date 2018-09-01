@@ -10,4 +10,5 @@ __pycache__/
 .DS_store
 .idea/
 *.hdf5
+*.png
 *.pickle
