@@ -259,8 +259,8 @@ def find_prediction_probability(model, q1_test, q2_test, y_test, qid_test, raw1_
     y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
 
     question_pred = []
-    for i in enumerate(q1_test):
-        pair = [qid_test[i], y_test[i], y_pred[i]]
+    for idx, i in enumerate(q1_test):
+        pair = [qid_test[idx], y_test[idx], y_pred[idx]]
         question_pred.append(pair)
     return question_pred
 
