@@ -38,6 +38,9 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed
     distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
 
+    q1_embed = GaussianNoise(0.01)(q1_embed)
+    q2_embed = GaussianNoise(0.01)(q2_embed)
+
     # Projection
     projection_layers = []
     if projection_hidden > 0:
