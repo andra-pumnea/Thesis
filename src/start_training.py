@@ -121,7 +121,7 @@ def run(FLAGS):
                                   validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
                                   batch_size=FLAGS.batch_size,
                                   nb_epoch=FLAGS.max_epochs,
-                                  shuffle=False,
+                                  shuffle=True,
                                   callbacks=callbacks)
         else:
             history = net.fit([q1_train, q2_train, features_train], y_train,
