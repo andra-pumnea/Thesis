@@ -7,28 +7,6 @@ from keras.layers import Input, Embedding, GRU, Lambda, Dense, concatenate, Batc
 from keras.optimizers import Adam
 from keras import regularizers
 from keras.callbacks import History
-import tensorflow as tf
-import tensorflow_hub as hub
-from keras import backend as K
-
-sess = tf.Session()
-K.set_session(sess)
-
-elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
-sess.run(tf.global_variables_initializer())
-sess.run(tf.tables_initializer())
-
-batch_size = 50
-max_len = 40
-
-
-def ElmoEmbedding(x):
-    return elmo_model(inputs={
-        "tokens": tf.squeeze(tf.cast(x, tf.string)),
-        "sequence_len": tf.constant(batch_size * [max_len])
-    },
-        signature="tokens",
-        as_dict=True)["elmo"]
 
 
 history = History()
@@ -53,8 +31,17 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-5):
     else:
         question1 = Input(shape=(maxlen,), dtype="string")
         question2 = Input(shape=(maxlen,), dtype="string")
-        encoded_q1 = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(question1)
-        encoded_q2 = Lambda(ElmoEmbedding, output_shape=(maxlen, 1024))(question2)
+        encoded_q1 = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(question1)
+        encoded_q2 = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(question2)
+
+    q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
+    q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
+    q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(q1_sent)
+    q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(q2_sent)
+    sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
+    sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
+    distance_sent = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
+        [sent1_dense, sent2_dense])
 
     # Since this is a siamese network, both sides share the same GRU
     shared_layer = GRU(n_hidden, kernel_initializer='glorot_uniform',
@@ -67,14 +54,14 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-5):
     distance = Lambda(preprocessing.exponent_neg_manhattan_distance, output_shape=preprocessing.get_shape)(
         [output_q1, output_q2])
 
-    output = concatenate([output_q1, output_q2, distance])
+    output = concatenate([output_q1, output_q2, distance, distance_sent])
     output = Dense(1, activation='sigmoid')(output)
     output = BatchNormalization()(output)
 
     output = Dense(1, activation='sigmoid')(output)
 
     # Pack it all up into a model
-    net = Model([question1, question2], [output])
+    net = Model([question1, question2, q1_sent, q2_sent], [output])
 
     net.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
                 metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
