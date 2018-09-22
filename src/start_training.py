@@ -99,7 +99,7 @@ def run(FLAGS):
     net = create_model(word_embedding_matrix)
     net.summary()
 
-    filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings)
+    filepath = "models/weights.best.%s.%s.%s.%s`.hdf5" % (FLAGS.task, model, experiment, embeddings)
     # filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
     if mode == "load":
         print("Loading weights from %s" % filepath)
