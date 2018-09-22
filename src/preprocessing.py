@@ -80,7 +80,10 @@ def read_dataset(file):
             question1.append(text_to_wordlist(row[1]))
             question2.append(text_to_wordlist(row[2]))
             is_duplicate.append(row[0])
-            qid.append(row[3])
+            if len(row) == 4:
+                qid.append(row[3])
+            else:
+                qid.append(0)
     print('Question pairs from %s: %d' % (file, len(question1)))
 
     return question1, question2, is_duplicate, qid
