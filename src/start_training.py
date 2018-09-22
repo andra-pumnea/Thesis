@@ -152,13 +152,14 @@ def create_model(word_embedding_matrix):
     model = FLAGS.model
     maxlen = FLAGS.max_sent_length
     embeddings = FLAGS.embeddings
+    sent_embed = FLAGS.sent_embed
 
     if model == "dec_att":
-        net = dec_att.create_model(word_embedding_matrix, maxlen, embeddings)
+        net = dec_att.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "esim":
-        net = esim.create_model(word_embedding_matrix, maxlen, embeddings)
+        net = esim.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "gru":
-        net = gru.create_model(word_embedding_matrix, maxlen, embeddings)
+        net = gru.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
     return net
 
 

@@ -14,7 +14,7 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed
                  lr=1e-3, activation='elu'):
     # Based on: https://arxiv.org/abs/1606.01933
 
-    if embeddings != 'elmo' and embeddings != 'univ_sent':
+    if embeddings != 'elmo':
         # Embedding
 
         q1 = Input(name='q1', shape=(maxlen,))
@@ -75,7 +75,10 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep, distance])
+    if sent_embed != 'univ_sent':
+        merged = Concatenate()([q1_rep, q2_rep, distance])
+    else:
+        merged = Concatenate()([q1_rep, q2_rep])
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation=activation)(dense)
     dense = Dropout(dense_dropout)(dense)
