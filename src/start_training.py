@@ -69,27 +69,30 @@ def run(FLAGS):
 
     # Prepare datasets
     if init_embeddings == 1:
-        q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train, word_embedding_matrix = preprocessing.prepare_dataset(train_file,
-                                                                                                           maxlen,
-                                                                                                           max_nb_words,
-                                                                                                           experiment,
-                                                                                                           dataset,
-                                                                                                           embeddings,
-                                                                                                           init_embeddings)
+        q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train, word_embedding_matrix = preprocessing.prepare_dataset(
+            train_file,
+            maxlen,
+            max_nb_words,
+            experiment,
+            dataset,
+            embeddings,
+            init_embeddings)
     else:
         q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train = preprocessing.prepare_dataset(train_file,
-                                                                                    maxlen,
-                                                                                    max_nb_words,
-                                                                                    experiment,
-                                                                                    dataset,
-                                                                                    embeddings,
-                                                                                    init_embeddings)
+                                                                                                       maxlen,
+                                                                                                       max_nb_words,
+                                                                                                       experiment,
+                                                                                                       dataset,
+                                                                                                       embeddings,
+                                                                                                       init_embeddings)
         word_embedding_matrix = np.zeros(1)
 
-    q1_dev, q2_dev, y_dev, qid_dev, raw1_dev, raw2_dev= preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words, experiment,
-                                                                        dataset, embeddings)
-    q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test = preprocessing.prepare_dataset(test_file, maxlen, max_nb_words, experiment,
-                                                                            dataset, embeddings)
+    q1_dev, q2_dev, y_dev, qid_dev, raw1_dev, raw2_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words,
+                                                                                       experiment,
+                                                                                       dataset, embeddings)
+    q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test = preprocessing.prepare_dataset(test_file, maxlen,
+                                                                                             max_nb_words, experiment,
+                                                                                             dataset, embeddings)
 
     if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
@@ -99,7 +102,7 @@ def run(FLAGS):
     net = create_model(word_embedding_matrix)
     net.summary()
 
-    filepath = "models/weights.best.%s.%s.%s.%s`.hdf5" % (FLAGS.task, model, experiment, embeddings)
+    filepath = "models/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings)
     # filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
     if mode == "load":
         print("Loading weights from %s" % filepath)
@@ -150,12 +153,12 @@ def create_model(word_embedding_matrix):
     maxlen = FLAGS.max_sent_length
     embeddings = FLAGS.embeddings
 
-    if model == "dec_att" :
-        net = dec_att.create_model(word_embedding_matrix, maxlen)
+    if model == "dec_att":
+        net = dec_att.create_model(word_embedding_matrix, maxlen, embeddings)
     elif model == "esim":
-        net = esim.create_model(word_embedding_matrix, maxlen)
+        net = esim.create_model(word_embedding_matrix, maxlen, embeddings)
     elif model == "gru":
-        net = gru.create_model(word_embedding_matrix, maxlen)
+        net = gru.create_model(word_embedding_matrix, maxlen, embeddings)
     return net
 
 
