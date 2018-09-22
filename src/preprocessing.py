@@ -9,7 +9,6 @@ import pickle
 from nltk.corpus import stopwords
 import nltk
 import re
-import feature_module
 
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
@@ -204,16 +203,13 @@ def prepare_elmo(maxlen, question1, question2, is_duplicate):
     return np.array(q1_data), np.array(q2_data), labels
 
 
-def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embeddings, train=0):
+def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, embeddings, train=0):
     question1, question2, is_duplicate, qid = read_dataset(filename)
 
-    if embeddings != 'elmo' or embeddings!= 'univ_sent':
+    if embeddings != 'elmo':
         q1_data, q2_data, labels, w_index = prepare_glove(maxlen, question1, question2, is_duplicate)
     else:
         q1_data, q2_data, labels = prepare_elmo(maxlen, question1, question2, is_duplicate)
-
-    file = get_filename(filename)
-    features = handle_features(question1, question2, feat, task, experiment, file)
 
     X = np.stack((q1_data, q2_data), axis=1)
     y = labels
@@ -224,9 +220,9 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, feat, embe
 
     if train == 1:
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
-        return Q1, Q2, y, qid, q1_raw, q2_raw, word_embedding_matrix, features
+        return Q1, Q2, y, qid, q1_raw, q2_raw, word_embedding_matrix
     else:
-        return Q1, Q2, y, qid, q1_raw, q2_raw, features
+        return Q1, Q2, y, qid, q1_raw, q2_raw
 
 
 def prepare_sentence_enc(question1, question2):
@@ -249,18 +245,18 @@ def get_filename(path):
 
 
 # save the file everytime a new feature is added
-def handle_features(question1, question2, feat, task, experiment, file):
-    feature_filename = "feature_files/%s.%s.%s.features.npy" % (task, experiment, file)
-    features = np.array([])
-
-    if feat == 'features':
-        if exists(feature_filename):
-            features = np.load(feature_filename)
-        if not exists(feature_filename):
-            features = feature_module.create_features(question1, question2)
-            np.save(feature_filename, features)
-
-    return features
+# def handle_features(question1, question2, feat, task, experiment, file):
+#     feature_filename = "feature_files/%s.%s.%s.features.npy" % (task, experiment, file)
+#     features = np.array([])
+#
+#     if feat == 'features':
+#         if exists(feature_filename):
+#             features = np.load(feature_filename)
+#         if not exists(feature_filename):
+#             features = feature_module.create_features(question1, question2)
+#             np.save(feature_filename, features)
+#
+#     return features
 
 
 def euclidean_distance(vecs):
