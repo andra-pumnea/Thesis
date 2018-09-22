@@ -10,6 +10,7 @@ import model_utils
 def create_model(pretrained_embedding,
                  maxlen=30,
                  embeddings = 'glove',
+                 sent_embed='univ_sent',
                  lstm_dim=300,
                  dense_dim=300,
                  dense_dropout=0.5):
@@ -63,7 +64,10 @@ def create_model(pretrained_embedding,
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    merged = Concatenate()([q1_rep, q2_rep, distance])
+    if sent_embed == 'univ_sent':
+        merged = Concatenate()([q1_rep, q2_rep, distance])
+    else:
+        merged = Concatenate()([q1_rep, q2_rep])
 
     dense = BatchNormalization()(merged)
     dense = Dense(dense_dim, activation='elu')(dense)

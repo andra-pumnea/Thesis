@@ -75,7 +75,7 @@ def create_model(pretrained_embedding, maxlen=30, embeddings='glove', sent_embed
     q2_rep = model_utils.apply_multiple(q2_compare, [GlobalAvgPool1D(), GlobalMaxPool1D()])
 
     # Classifier
-    if sent_embed != 'univ_sent':
+    if sent_embed == 'univ_sent':
         merged = Concatenate()([q1_rep, q2_rep, distance])
     else:
         merged = Concatenate()([q1_rep, q2_rep])

@@ -59,6 +59,7 @@ def run(FLAGS):
     max_nb_words = FLAGS.max_nb_words
     experiment = FLAGS.experiment
     dataset = FLAGS.task
+    sent_embed = FLAGS.sent_embed
 
     if embeddings == 'elmo':
         init_embeddings = 0
@@ -102,7 +103,7 @@ def run(FLAGS):
     net = create_model(word_embedding_matrix)
     net.summary()
 
-    filepath = "models/weights.best.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings)
+    filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
     # filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
     if mode == "load":
         print("Loading weights from %s" % filepath)
@@ -121,7 +122,7 @@ def run(FLAGS):
                           shuffle=True,
                           callbacks=callbacks)
 
-        pickle_file = "saved_history/history.%s.%s.%s.pickle" % (FLAGS.task, model, experiment)
+        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (FLAGS.task, model, experiment, embeddings, sent_embed)
         with open(pickle_file, 'wb') as handle:
             pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -140,7 +141,7 @@ def run(FLAGS):
 
     # cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train
     #                                        q1_test, q2_test, y_test)
-    print("Finished running %s model on %s" % (model, experiment))
+    print("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
     # print_crossval(cvscores)
     # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))

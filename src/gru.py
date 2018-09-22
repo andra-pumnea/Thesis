@@ -13,7 +13,7 @@ history = History()
 n_hidden = 250
 
 
-def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-5):
+def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embed='univ_sent', lr=1e-5):
     # The visible layer
     if embeddings != 'elmo':
         question1 = Input(shape=(maxlen,))
@@ -54,7 +54,10 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', lr=1e-5):
     distance = Lambda(preprocessing.exponent_neg_manhattan_distance, output_shape=preprocessing.get_shape)(
         [output_q1, output_q2])
 
-    output = concatenate([output_q1, output_q2, distance, distance_sent])
+    if sent_embed == 'univ_sent':
+        output = concatenate([output_q1, output_q2, distance, distance_sent])
+    else:
+        output = concatenate([output_q1, output_q2, distance])
     output = Dense(1, activation='sigmoid')(output)
     output = BatchNormalization()(output)
 
