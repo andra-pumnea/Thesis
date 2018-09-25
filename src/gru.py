@@ -3,7 +3,7 @@ from __future__ import print_function
 import model_utils
 import preprocessing
 from keras.models import Model
-from keras.layers import Input, Embedding, GRU, Lambda, Dense, concatenate, BatchNormalization, Dropout
+from keras.layers import Input, Embedding, GRU, Lambda, Dense, concatenate, BatchNormalization, Dropout, K
 from keras.optimizers import Adam
 from keras import regularizers
 from keras.callbacks import History
@@ -53,14 +53,19 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embe
     squared_diff = Lambda(preprocessing.squared_difference)([output_q1, output_q2])
     mult = Lambda(preprocessing.multiplication)([output_q1, output_q2])
 
+    print(K.shape(mult))
+    print(K.shape(squared_diff))
+
     if sent_embed == 'univ_sent':
         merged = concatenate([output_q1, output_q2, squared_diff, mult, distance_sent])
     else:
         merged = concatenate([output_q1, output_q2, squared_diff, mult])
 
-    merged = Dense(300, activation='relu')(merged)
     merged = BatchNormalization()(merged)
-    merged = Dense(300, activation='relu')(merged)
+
+    merged = Dense(250, activation='relu')(merged)
+    merged = BatchNormalization()(merged)
+    merged = Dense(250, activation='relu')(merged)
     merged = BatchNormalization()(merged)
 
     output = Dense(1, activation='softmax', kernel_regularizer=regularizers.l2(0.0001),

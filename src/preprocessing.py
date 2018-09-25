@@ -269,7 +269,8 @@ def squared_difference(vecs):
 
 def multiplication(vecs):
     x, y = vecs
-    return K.dot(x, y)
+    print(K.shape(x), K.shape(y))
+    return K.batch_dot(x, y)
 
 
 def euclidean_distance(vecs):
