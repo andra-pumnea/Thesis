@@ -261,6 +261,15 @@ def get_filename(path):
 #
 #     return features
 
+def squared_difference(vecs):
+    x, y = vecs
+    return K.square(x - y)
+
+
+def multiplication(vecs):
+    x, y = vecs
+    return K.dot(x, y)
+
 
 def euclidean_distance(vecs):
     x, y = vecs
@@ -277,7 +286,6 @@ def cosine_distance(vecs):
 def exponent_neg_manhattan_distance(vecs):
     x, y = vecs
     return K.exp(-K.sum(K.abs(x - y), axis=1, keepdims=True))
-
 
 def get_shape(shapes):
     shape1, shape2 = shapes

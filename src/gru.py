@@ -50,18 +50,20 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embe
     output_q1 = shared_layer(encoded_q1)
     output_q2 = shared_layer(encoded_q2)
 
-    # Calculates the distance as defined by the Euclidean RNN model
-    distance = Lambda(preprocessing.exponent_neg_manhattan_distance, output_shape=preprocessing.get_shape)(
-        [output_q1, output_q2])
+    squared_diff = Lambda(preprocessing.squared_difference, output_shape=preprocessing.get_shape)([output_q1, output_q2])
+    mult = Lambda(preprocessing.multiplication, output_shape=preprocessing.get_shape)([output_q1, output_q2])
 
     if sent_embed == 'univ_sent':
-        output = concatenate([output_q1, output_q2, distance, distance_sent])
+        output = concatenate([output_q1, output_q2, squared_diff, mult, distance_sent])
     else:
-        output = concatenate([output_q1, output_q2, distance])
-    output = Dense(1, activation='sigmoid')(output)
+        output = concatenate([output_q1, output_q2, squared_diff, mult])
+
+    output = Dense(300, activation='relu')(output)
+    output = BatchNormalization()(output)
+    output = Dense(300, activation='relu')(output)
     output = BatchNormalization()(output)
 
-    output = Dense(1, activation='sigmoid')(output)
+    output = Dense(1, activation='softmax', kernel_regularizer=0.0001, bias_regularizer=0.0001)(output)
 
     # Pack it all up into a model
     net = Model([question1, question2, q1_sent, q2_sent], [output])
