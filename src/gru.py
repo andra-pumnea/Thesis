@@ -50,20 +50,21 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embe
     output_q1 = shared_layer(encoded_q1)
     output_q2 = shared_layer(encoded_q2)
 
-    squared_diff = Lambda(preprocessing.squared_difference, output_shape=preprocessing.get_shape)([output_q1, output_q2])
-    mult = Lambda(preprocessing.multiplication, output_shape=preprocessing.get_shape)([output_q1, output_q2])
+    squared_diff = Lambda(preprocessing.squared_difference)([output_q1, output_q2])
+    mult = Lambda(preprocessing.multiplication)([output_q1, output_q2])
 
     if sent_embed == 'univ_sent':
-        output = concatenate([output_q1, output_q2, squared_diff, mult, distance_sent])
+        merged = concatenate([output_q1, output_q2, squared_diff, mult, distance_sent])
     else:
-        output = concatenate([output_q1, output_q2, squared_diff, mult])
+        merged = concatenate([output_q1, output_q2, squared_diff, mult])
 
-    output = Dense(300, activation='relu')(output)
-    output = BatchNormalization()(output)
-    output = Dense(300, activation='relu')(output)
-    output = BatchNormalization()(output)
+    merged = Dense(300, activation='relu')(merged)
+    merged = BatchNormalization()(merged)
+    merged = Dense(300, activation='relu')(merged)
+    merged = BatchNormalization()(merged)
 
-    output = Dense(1, activation='softmax', kernel_regularizer=0.0001, bias_regularizer=0.0001)(output)
+    output = Dense(1, activation='softmax', kernel_regularizer=regularizers.l2(0.0001),
+                   bias_regularizer=regularizers.l2(0.0001))(merged)
 
     # Pack it all up into a model
     net = Model([question1, question2, q1_sent, q2_sent], [output])

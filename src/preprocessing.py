@@ -13,11 +13,12 @@ import re
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
 FASTTEXT_FILE = '/home/andrada.pumnea/Data/Embeddings/wiki.en.vec'
-#FASTTEXT_FILE = '/home/andrada.pumnea/Data/Embeddings/wiki-news-300d-1M-subword.vec'
+# FASTTEXT_FILE = '/home/andrada.pumnea/Data/Embeddings/wiki-news-300d-1M-subword.vec'
 EMBEDDING_DIM = 300
 
 nltk.download('stopwords')
 stops = set(stopwords.words("english"))
+
 
 def text_to_wordlist(text, remove_stopwords=False):
     # Clean the text, with the option to remove stopwords and to stem words.
@@ -287,6 +288,7 @@ def exponent_neg_manhattan_distance(vecs):
     x, y = vecs
     return K.exp(-K.sum(K.abs(x - y), axis=1, keepdims=True))
 
+
 def get_shape(shapes):
     shape1, shape2 = shapes
     return (shape1[0], 1)
@@ -294,5 +296,3 @@ def get_shape(shapes):
 
 def compute_accuracy(predictions, labels):
     return np.mean(np.equal(predictions.ravel() < 0.5, labels))
-
-
