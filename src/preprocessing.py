@@ -264,13 +264,13 @@ def get_filename(path):
 
 def squared_difference(vecs):
     x, y = vecs
-    return K.square(x - y)
+    return K.sum(K.square(x - y), axis=-1, keepdims=True)
 
 
 def multiplication(vecs):
     x, y = vecs
     print(K.shape(x), K.shape(y))
-    return K.batch_dot(x, y)
+    return K.sum(x * y, axis=-1, keepdims=True)
 
 
 def euclidean_distance(vecs):

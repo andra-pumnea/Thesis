@@ -3,17 +3,17 @@ from __future__ import print_function
 import model_utils
 import preprocessing
 from keras.models import Model
-from keras.layers import Input, Embedding, GRU, Lambda, Dense, concatenate, BatchNormalization, Dropout, K
+from keras.layers import TimeDistributed, Input, Embedding, GRU, Lambda, Dense, concatenate, BatchNormalization, Dropout, K
 from keras.optimizers import Adam
 from keras import regularizers
 from keras.callbacks import History
 
 
 history = History()
-n_hidden = 250
+n_hidden = 300
 
 
-def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embed='univ_sent', lr=1e-5):
+def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embed='univ_sent', lr=1e-3):
     # The visible layer
     if embeddings != 'elmo':
         question1 = Input(shape=(maxlen,))
@@ -28,6 +28,8 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embe
         # Embedded version of the inputs
         encoded_q1 = embedding_layer(question1)
         encoded_q2 = embedding_layer(question2)
+        encoded_q1 = TimeDistributed(Dense(out_dim, activation='relu'))(encoded_q1)
+        encoded_q2 = TimeDistributed(Dense(out_dim, activation='relu'))(encoded_q2)
     else:
         question1 = Input(shape=(maxlen,), dtype="string")
         question2 = Input(shape=(maxlen,), dtype="string")
@@ -50,25 +52,26 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embe
     output_q1 = shared_layer(encoded_q1)
     output_q2 = shared_layer(encoded_q2)
 
-    squared_diff = Lambda(preprocessing.squared_difference)([output_q1, output_q2])
-    mult = Lambda(preprocessing.multiplication)([output_q1, output_q2])
-
-    print(K.shape(mult))
-    print(K.shape(squared_diff))
+    squared_diff = Lambda(preprocessing.squared_difference, output_shape=preprocessing.get_shape)([output_q1, output_q2])
+    mult = Lambda(preprocessing.multiplication, output_shape=preprocessing.get_shape)([output_q1, output_q2])
 
     if sent_embed == 'univ_sent':
         merged = concatenate([output_q1, output_q2, squared_diff, mult, distance_sent])
     else:
         merged = concatenate([output_q1, output_q2, squared_diff, mult])
 
-    merged = BatchNormalization()(merged)
+    #merged = BatchNormalization()(merged)
 
-    merged = Dense(250, activation='relu')(merged)
+    merged = Dense(n_hidden, activation='relu')(merged)
+    merged = Dropout(0.1)(merged)
     merged = BatchNormalization()(merged)
-    merged = Dense(250, activation='relu')(merged)
+    merged = Dense(n_hidden, activation='relu')(merged)
+    merged = Dropout(0.1)(merged)
     merged = BatchNormalization()(merged)
+   # merged = Dense(1, activation='sigmoid')(merged)
+   # merged = BatchNormalization()(merged)
 
-    output = Dense(1, activation='softmax', kernel_regularizer=regularizers.l2(0.0001),
+    output = Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.0001),
                    bias_regularizer=regularizers.l2(0.0001))(merged)
 
     # Pack it all up into a model
