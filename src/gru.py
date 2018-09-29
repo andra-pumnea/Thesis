@@ -3,7 +3,8 @@ from __future__ import print_function
 import model_utils
 import preprocessing
 from keras.models import Model
-from keras.layers import TimeDistributed, Input, Embedding, GRU, Lambda, Dense, concatenate, BatchNormalization, Dropout, K
+from keras.layers import TimeDistributed, Input, Embedding, GRU, Lambda, Dense, concatenate, BatchNormalization, \
+    Dropout, K, GaussianNoise
 from keras.optimizers import Adam
 from keras import regularizers
 from keras.callbacks import History
@@ -51,6 +52,9 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embe
 
     output_q1 = shared_layer(encoded_q1)
     output_q2 = shared_layer(encoded_q2)
+
+    output_q1 = GaussianNoise(0.01)(output_q1)
+    output_q2 = GaussianNoise(0.01)(output_q2)
 
     squared_diff = Lambda(preprocessing.squared_difference, output_shape=preprocessing.get_shape)([output_q1, output_q2])
     mult = Lambda(preprocessing.multiplication, output_shape=preprocessing.get_shape)([output_q1, output_q2])
