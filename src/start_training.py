@@ -151,6 +151,7 @@ def run(FLAGS):
     with open("results.txt", "a") as myfile:
         myfile.write("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
         myfile.write('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
+        myfile.write('\n')
 
 def create_model(word_embedding_matrix):
     model = FLAGS.model
