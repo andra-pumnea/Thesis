@@ -148,6 +148,9 @@ def run(FLAGS):
     test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath)
     print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 
+    with open("results.txt", "a") as myfile:
+        myfile.write("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
+        myfile.write('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 
 def create_model(word_embedding_matrix):
     model = FLAGS.model
