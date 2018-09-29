@@ -43,6 +43,10 @@ def create_model(pretrained_embedding,
     distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
 
+
+    q1_embed = GaussianNoise(0.01)(q1_embed)
+    q2_embed = GaussianNoise(0.01)(q2_embed)
+
     # Encode
     encode = Bidirectional(LSTM(lstm_dim, return_sequences=True))
     q1_encoded = encode(q1_embed)
