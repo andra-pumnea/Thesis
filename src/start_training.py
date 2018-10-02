@@ -106,6 +106,13 @@ def run(FLAGS):
     filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
     if mode == "ensemble":
         print("Create ensemble of models")
+    elif mode == "fine-tuning":
+        model_file = "models/weights.best.quora.dec_att.training_full.glove.no_univ_sent.hdf5"
+        print("Loading pre-trained model from %s:" % model_file)
+        net.load_weights(model_file)
+        net = freeze_layers(net)
+        net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+                    metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     elif mode == "load":
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
@@ -123,7 +130,8 @@ def run(FLAGS):
                           shuffle=True,
                           callbacks=callbacks)
 
-        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (FLAGS.task, model, experiment, embeddings, sent_embed)
+        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
+        FLAGS.task, model, experiment, embeddings, sent_embed)
         with open(pickle_file, 'wb') as handle:
             pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -149,7 +157,8 @@ def run(FLAGS):
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
     if mode != 'ensemble':
-        test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath)
+        test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test,
+                                                           filepath)
     else:
         test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, y_test)
         test_acc = evaluate_accuracy(net, q1_test, q2_test, raw1_test, raw2_test, y_test)
@@ -157,7 +166,8 @@ def run(FLAGS):
 
     with open("results.txt", "a") as myfile:
         myfile.write("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
-        myfile.write('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
+        myfile.write(
+            'Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
         myfile.write('\n')
 
 
@@ -191,13 +201,20 @@ def create_model(word_embedding_matrix):
     return net
 
 
+def freeze_layers(model):
+    for layer in model.layers[0:-1]:
+        layer.trainable = False
+    return model
+
+
 def ensemble_models(model_input, word_embedding_matrix):
     maxlen = FLAGS.max_sent_length
     embeddings = FLAGS.embeddings
     sent_embed = FLAGS.sent_embed
     experiment = FLAGS.experiment
 
-    decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
+    decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (
+    FLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
     esim_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'esim', experiment, embeddings, sent_embed)
     gru_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'gru', experiment, embeddings, sent_embed)
     models = ensembling.create_ensemble(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed,
@@ -229,7 +246,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, f
 def evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
     pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
     pred = np.argmax(pred, axis=1)
-    pred = np.expand_dims(pred, axis=1) # make same shape as y_test
+    pred = np.expand_dims(pred, axis=1)  # make same shape as y_test
     error = np.sum(np.not_equal(pred, y_test)) / y_test.shape[0]
     return error
 
