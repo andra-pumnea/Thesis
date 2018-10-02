@@ -180,7 +180,7 @@ def create_model(word_embedding_matrix):
         net = gru.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "ensemble":
         models = ensemble_models(model_input, word_embedding_matrix)
-        net = ensembling.ensemble(model_input, models, maxlen, embeddings)
+        net = ensembling.ensemble(model_input, models)
     return net
 
 
