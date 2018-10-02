@@ -40,7 +40,7 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
     # q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
     # q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
     q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[2])
-    q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input3)
+    q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[3])
     sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
     sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
     distance_sent = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
@@ -79,7 +79,7 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
                    bias_regularizer=regularizers.l2(0.0001))(merged)
 
     # Pack it all up into a model
-    net = Model([question1, question2, q1_sent, q2_sent], [output])
+    net = Model(model_input, [output])
 
     net.compile(optimizer=Adam(lr=lr), loss='binary_crossentropy',
                 metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
