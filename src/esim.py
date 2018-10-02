@@ -16,8 +16,6 @@ def create_model(model_input, pretrained_embedding,
 
     # Based on arXiv:1609.06038
     if embeddings != 'elmo':
-        # q1 = Input(name='q1', shape=(maxlen,))
-        # q2 = Input(name='q2', shape=(maxlen,))
         # Embedding
         embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
                                                             mask_zero=False)
@@ -26,15 +24,10 @@ def create_model(model_input, pretrained_embedding,
         q2_embed = bn(embedding(model_input[1]))
 
     else:
-        # q1 = Input(shape=(maxlen,), dtype="string")
-        # q2 = Input(shape=(maxlen,), dtype="string")
-
         bn = BatchNormalization(axis=2)
         q1_embed = bn(Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[0]))
         q2_embed = bn(Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[1]))
 
-    # q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
-    # q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
     q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[2])
     q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[3])
     sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
