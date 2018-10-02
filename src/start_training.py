@@ -148,7 +148,7 @@ def run(FLAGS):
     # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
-    if mode == 'ensemble':
+    if mode != 'ensemble':
         test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath)
     else:
         test_loss = evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, y_test)
@@ -203,17 +203,6 @@ def ensemble_models(model_input, word_embedding_matrix):
     models = ensembling.create_ensemble(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed,
                                         decatt_file, esim_file, gru_file)
     return models
-
-
-def get_intermediate_layer(net):
-    # interm_layer = net.get_layer(layer_name).output
-    inp = net.input  # input placeholder
-    outputs = [layer.output for layer in net.layers]  # all layer outputs
-    functor = K.function([inp] + [K.learning_phase()], outputs)
-
-    test = np.random.random(300)[np.newaxis, ...]
-    layer_outs = functor([test, 1.])
-    print(layer_outs)
 
 
 def print_crossval(cvscores):
@@ -287,14 +276,6 @@ def write_predictions(question_pred):
         for pair in question_pred:
             f.writelines(str(pair[0]) + '\t' + str(pair[1]) + '\t' + str(pair[2]) + '\n')
     print("Finished writing questions ids and their predictions")
-
-
-def write_misclassified(misclassified_q):
-    output_file = "errors/misclassified.%s.%s.%s.tsv" % (FLAGS.task, FLAGS.model, FLAGS.experiment)
-    with open(output_file, 'w+') as f:
-        for pair in misclassified_q:
-            f.writelines(str(pair[0]) + '\t' + str(pair[1]) + '\t' + str(pair[2]) + '\t' + str(pair[3]) + '\n')
-    print("Finished writing misclassified questions")
 
 
 def get_callbacks(filename):
