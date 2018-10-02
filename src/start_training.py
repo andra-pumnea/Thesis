@@ -137,8 +137,6 @@ def run(FLAGS):
         print("------------Unknown mode------------")
 
     get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test)
-    error = evaluate_error(q1_test, q2_test, raw1_test, raw2_test, y_test)
-    print("Error: {:.4f}".format(error))
 
     predictions = find_prediction_probability(net, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test)
     write_predictions(predictions)
@@ -149,13 +147,19 @@ def run(FLAGS):
     # print_crossval(cvscores)
     # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
-    test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath)
+
+    if mode == 'ensemble':
+        test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath)
+    else:
+        test_loss = evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, y_test)
+        test_acc = evaluate_accuracy(model, q1_test, q2_test, raw1_test, raw2_test, y_test)
     print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 
     with open("results.txt", "a") as myfile:
         myfile.write("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
         myfile.write('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
         myfile.write('\n')
+
 
 def create_model(word_embedding_matrix):
     model = FLAGS.model
@@ -241,6 +245,12 @@ def evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
     return error
 
 
+def evaluate_accuracy(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
+    y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test)
+    score = accuracy_score(y_test, y_pred)
+    return score
+
+
 def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test):
     y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test)
 
@@ -250,9 +260,6 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test):
     print("Classification report:")
     target_names = ['non_duplicate', 'duplicate']
     print(classification_report(y_test, y_pred, target_names=target_names))
-
-    score = accuracy_score(y_test, y_pred)
-    print("Accuracy : ".format(score))
 
 
 def find_prediction_probability(model, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test):
@@ -272,12 +279,6 @@ def get_predictions(model, q1_test, q2_test, raw1_test, raw2_test):
     y_pred = y_pred.astype(int)
 
     return y_pred
-
-
-def compute_accuracy_score(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
-    y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test)
-    score = accuracy_score(y_test, y_pred)
-    return score
 
 
 def write_predictions(question_pred):
