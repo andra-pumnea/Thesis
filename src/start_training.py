@@ -156,7 +156,7 @@ def run(FLAGS):
     # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
-    if mode != 'ensemble':
+    if mode == "training":
         test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test,
                                                            filepath)
     else:
