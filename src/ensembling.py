@@ -21,20 +21,10 @@ def create_ensemble(word_embedding_matrix, maxlen, embeddings, sent_embed,
     return models
 
 
-def ensemble(models, maxlen, embeddings):
-    if embeddings != 'elmo':
-        q1 = Input(name='q1', shape=(maxlen,))
-        q2 = Input(name='q2', shape=(maxlen,))
-    else:
-        q1 = Input(shape=(maxlen,), dtype="string")
-        q2 = Input(shape=(maxlen,), dtype="string")
-
-    q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
-    q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
-
+def ensemble(model_input, models):
     outputs = [model.outputs[0] for model in models]
     y = Average()(outputs)
 
-    model = Model(inputs=[q1, q2, q1_sent, q2_sent], outputs=y, name='ensemble')
+    model = Model(inputs=model_input, outputs=y, name='ensemble')
 
     return model

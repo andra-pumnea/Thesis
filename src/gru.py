@@ -14,11 +14,11 @@ history = History()
 n_hidden = 300
 
 
-def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embed='univ_sent', lr=1e-3):
+def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glove', sent_embed='univ_sent', lr=1e-3):
     # The visible layer
     if embeddings != 'elmo':
-        question1 = Input(shape=(maxlen,))
-        question2 = Input(shape=(maxlen,))
+        # question1 = Input(shape=(maxlen,))
+        # question2 = Input(shape=(maxlen,))
 
         in_dim, out_dim = word_embedding_matrix.shape
         embedding_layer = Embedding(in_dim,
@@ -27,20 +27,20 @@ def create_model(word_embedding_matrix, maxlen=30, embeddings='glove', sent_embe
                                     input_length=maxlen,
                                     trainable=True)
         # Embedded version of the inputs
-        encoded_q1 = embedding_layer(question1)
-        encoded_q2 = embedding_layer(question2)
+        encoded_q1 = embedding_layer(model_input[0])
+        encoded_q2 = embedding_layer(model_input[1])
         encoded_q1 = TimeDistributed(Dense(out_dim, activation='relu'))(encoded_q1)
         encoded_q2 = TimeDistributed(Dense(out_dim, activation='relu'))(encoded_q2)
     else:
-        question1 = Input(shape=(maxlen,), dtype="string")
-        question2 = Input(shape=(maxlen,), dtype="string")
-        encoded_q1 = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(question1)
-        encoded_q2 = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(question2)
+        # question1 = Input(shape=(maxlen,), dtype="string")
+        # question2 = Input(shape=(maxlen,), dtype="string")
+        encoded_q1 = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[0])
+        encoded_q2 = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[1])
 
-    q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
-    q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
-    q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(q1_sent)
-    q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(q2_sent)
+    # q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
+    # q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
+    q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[2])
+    q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input3)
     sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
     sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
     distance_sent = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(

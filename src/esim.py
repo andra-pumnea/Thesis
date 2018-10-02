@@ -6,7 +6,7 @@ import preprocessing as preprocessing
 import model_utils as model_utils
 
 # https://www.kaggle.com/lamdang/dl-models
-def create_model(pretrained_embedding,
+def create_model(model_input, pretrained_embedding,
                  maxlen=30,
                  embeddings = 'glove',
                  sent_embed='univ_sent',
@@ -16,35 +16,35 @@ def create_model(pretrained_embedding,
 
     # Based on arXiv:1609.06038
     if embeddings != 'elmo':
-        q1 = Input(name='q1', shape=(maxlen,))
-        q2 = Input(name='q2', shape=(maxlen,))
+        # q1 = Input(name='q1', shape=(maxlen,))
+        # q2 = Input(name='q2', shape=(maxlen,))
         # Embedding
         embedding = model_utils.create_pretrained_embedding(pretrained_embedding,
                                                             mask_zero=False)
         bn = BatchNormalization(axis=2)
-        q1_embed = bn(embedding(q1))
-        q2_embed = bn(embedding(q2))
+        q1_embed = bn(embedding(model_input[0]))
+        q2_embed = bn(embedding(model_input[1]))
 
     else:
-        q1 = Input(shape=(maxlen,), dtype="string")
-        q2 = Input(shape=(maxlen,), dtype="string")
+        # q1 = Input(shape=(maxlen,), dtype="string")
+        # q2 = Input(shape=(maxlen,), dtype="string")
 
         bn = BatchNormalization(axis=2)
-        q1_embed = bn(Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(q1))
-        q2_embed = bn(Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(q2))
+        q1_embed = bn(Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[0]))
+        q2_embed = bn(Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[1]))
 
-    q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
-    q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
-    q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(q1_sent)
-    q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(q2_sent)
+    # q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
+    # q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
+    q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[2])
+    q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[3])
     sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
     sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
     distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
 
 
-    q1_embed = GaussianNoise(0.01)(q1_embed)
-    q2_embed = GaussianNoise(0.01)(q2_embed)
+    # q1_embed = GaussianNoise(0.01)(q1_embed)
+    # q2_embed = GaussianNoise(0.01)(q2_embed)
 
     # Encode
     encode = Bidirectional(LSTM(lstm_dim, return_sequences=True))

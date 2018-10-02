@@ -8,7 +8,7 @@ import time
 
 from keras.callbacks import History, ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
-from keras import backend as K
+from keras import backend as K, Input
 from keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import StratifiedKFold
@@ -160,15 +160,27 @@ def create_model(word_embedding_matrix):
     embeddings = FLAGS.embeddings
     sent_embed = FLAGS.sent_embed
 
+    if embeddings != 'elmo':
+        q1 = Input(name='q1', shape=(maxlen,))
+        q2 = Input(name='q2', shape=(maxlen,))
+    else:
+        q1 = Input(shape=(maxlen,), dtype="string")
+        q2 = Input(shape=(maxlen,), dtype="string")
+
+    q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
+    q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
+
+    model_input = [q1, q2, q1_sent, q2_sent]
+
     if model == "dec_att":
-        net = dec_att.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
+        net = dec_att.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "esim":
-        net = esim.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
+        net = esim.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "gru":
-        net = gru.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
+        net = gru.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "ensemble":
         models = ensemble_models(word_embedding_matrix)
-        net = ensembling.ensemble(models, maxlen, embeddings)
+        net = ensembling.ensemble(model_input, models, maxlen, embeddings)
     return net
 
 
@@ -184,7 +196,6 @@ def ensemble_models(word_embedding_matrix):
     models = ensembling.create_ensemble(word_embedding_matrix, maxlen, embeddings, sent_embed,
                                         decatt_file, esim_file, gru_file)
     return models
-w
 
 def get_intermediate_layer(net):
     # interm_layer = net.get_layer(layer_name).output
