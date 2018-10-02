@@ -118,6 +118,23 @@ def run(FLAGS):
         net.load_weights(filepath)
         net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
+        t0 = time.time()
+        callbacks = get_callbacks(filepath)
+        history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
+                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
+                          batch_size=FLAGS.batch_size,
+                          nb_epoch=FLAGS.max_epochs,
+                          shuffle=True,
+                          callbacks=callbacks)
+
+        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (FLAGS.task, model, experiment, embeddings, sent_embed)
+        with open(pickle_file, 'wb') as handle:
+            pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        t1 = time.time()
+        print("Training ended at", datetime.datetime.now())
+        print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
+
     elif mode == "training":
         # Start training
         print("Starting training at", datetime.datetime.now())
@@ -156,7 +173,7 @@ def run(FLAGS):
     # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
-    if mode == "training":
+    if mode == "training" or mode == "fine-tuning":
         test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test,
                                                            filepath)
     else:
