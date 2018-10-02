@@ -101,25 +101,18 @@ def run(FLAGS):
         y_test = to_categorical(y_test, num_classes=None)
 
     net = create_model(word_embedding_matrix)
+    net.summary()
 
     filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
     if mode == "ensemble":
-        decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
-        esim_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'esim', experiment, embeddings, sent_embed)
-        gru_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'gru', experiment, embeddings, sent_embed)
-        models = ensembling.create_ensemble(word_embedding_matrix, maxlen, embeddings, sent_embed,
-                                            decatt_file, esim_file, gru_file)
-        net = ensembling.ensemble(models, maxlen, embeddings)
-        net.summary()
+        print("Create ensemble of models")
     elif mode == "load":
-        net.summary()
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
         net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     elif mode == "training":
         # Start training
-        net.summary()
         print("Starting training at", datetime.datetime.now())
         t0 = time.time()
         callbacks = get_callbacks(filepath)
@@ -174,9 +167,24 @@ def create_model(word_embedding_matrix):
     elif model == "gru":
         net = gru.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "ensemble":
-        pass
+        models = ensemble_models(word_embedding_matrix)
+        net = ensembling.ensemble(models, maxlen, embeddings)
     return net
 
+
+def ensemble_models(word_embedding_matrix):
+    maxlen = FLAGS.max_sent_length
+    embeddings = FLAGS.embeddings
+    sent_embed = FLAGS.sent_embed
+    experiment = FLAGS.experiment
+
+    decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
+    esim_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'esim', experiment, embeddings, sent_embed)
+    gru_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'gru', experiment, embeddings, sent_embed)
+    models = ensembling.create_ensemble(word_embedding_matrix, maxlen, embeddings, sent_embed,
+                                        decatt_file, esim_file, gru_file)
+    return models
+w
 
 def get_intermediate_layer(net):
     # interm_layer = net.get_layer(layer_name).output
