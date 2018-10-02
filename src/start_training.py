@@ -227,7 +227,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, f
 
 
 def evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
-    pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=FLAGS.batch_size)
+    pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
     pred = np.argmax(pred, axis=1)
     pred = np.expand_dims(pred, axis=1) # make same shape as y_test
     error = np.sum(np.not_equal(pred, y_test)) / y_test.shape[0]
