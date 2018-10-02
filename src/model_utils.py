@@ -6,7 +6,7 @@ import tensorflow_hub as hub
 
 batch_size = 50
 max_len = 40
-univ_model = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/3")
+univ_model = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/2")
 elmo_model = hub.Module("https://tfhub.dev/google/elmo/2", trainable=True)
 
 

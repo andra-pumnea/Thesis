@@ -13,15 +13,15 @@ from keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import StratifiedKFold
 
-import model_utils
-import vocab
-import preprocessing
-import dec_att
-import esim
-import gru
-import namespace_utils
+import src.preprocessing as preprocessing
+import src.model_utils as model_utils
+import src.vocab as vocab
+import src.dec_att as dec_att
+import src.esim as esim
+import src.gru as gru
+import src.ensembling as ensembling
+import src.namespace_utils as namespace_utils
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 import random as rn
 import os
@@ -101,17 +101,25 @@ def run(FLAGS):
         y_test = to_categorical(y_test, num_classes=None)
 
     net = create_model(word_embedding_matrix)
-    net.summary()
 
     filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
-    # filepath = "models/weights.best.quora.dec_att.training_full.hdf5"
-    if mode == "load":
+    if mode == "ensemble":
+        decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
+        esim_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'esim', experiment, embeddings, sent_embed)
+        gru_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'gru', experiment, embeddings, sent_embed)
+        models = ensembling.create_ensemble(word_embedding_matrix, maxlen, embeddings, sent_embed,
+                                            decatt_file, esim_file, gru_file)
+        net = ensembling.ensemble(models, maxlen, embeddings)
+        net.summary()
+    elif mode == "load":
+        net.summary()
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
         net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     elif mode == "training":
         # Start training
+        net.summary()
         print("Starting training at", datetime.datetime.now())
         t0 = time.time()
         callbacks = get_callbacks(filepath)
@@ -165,6 +173,8 @@ def create_model(word_embedding_matrix):
         net = esim.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "gru":
         net = gru.create_model(word_embedding_matrix, maxlen, embeddings, sent_embed)
+    elif model == "ensemble":
+        pass
     return net
 
 
@@ -308,7 +318,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=128, help='Number of instances in each batch.')
     parser.add_argument('--max_epochs', type=int, default=1, help='Maximum epochs for training.')
 
-    parser.add_argument('--config_path', type=str, default='quora.config', help='Configuration file.')
+    parser.add_argument('--config_path', type=str, default='configs/quora.config', help='Configuration file.')
 
     args, unparsed = parser.parse_known_args()
     if args.config_path is not None:
