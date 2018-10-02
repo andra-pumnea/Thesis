@@ -151,8 +151,8 @@ def run(FLAGS):
     if mode != 'ensemble':
         test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath)
     else:
-        test_loss = evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, y_test)
-        test_acc = evaluate_accuracy(model, q1_test, q2_test, raw1_test, raw2_test, y_test)
+        test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, y_test)
+        test_acc = evaluate_accuracy(net, q1_test, q2_test, raw1_test, raw2_test, y_test)
     print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 
     with open("results.txt", "a") as myfile:
