@@ -179,7 +179,7 @@ def create_model(word_embedding_matrix):
     elif model == "gru":
         net = gru.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "ensemble":
-        models = ensemble_models(word_embedding_matrix)
+        models = ensemble_models(model_input, word_embedding_matrix)
         net = ensembling.ensemble(model_input, models, maxlen, embeddings)
     return net
 
@@ -219,9 +219,10 @@ def get_best(history):
 
 
 def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath):
-    model.load_weights(filepath)
-    scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
+    if FLAGS.model != 'ensemble':
+        model.load_weights(filepath)
 
+    scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
     loss = scores[1]
     accuracy = scores[2]
     f1_score = scores[3]
