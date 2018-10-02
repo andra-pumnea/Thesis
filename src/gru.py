@@ -1,7 +1,7 @@
 from __future__ import print_function
 
-import src.preprocessing as preprocessing
-import src.model_utils as model_utils
+import preprocessing as preprocessing
+import model_utils as model_utils
 from keras.models import Model
 from keras.layers import TimeDistributed, Input, Embedding, GRU, Lambda, Dense, concatenate, BatchNormalization, \
     Dropout, K, GaussianNoise

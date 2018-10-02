@@ -2,8 +2,8 @@ from __future__ import print_function
 from keras.layers import *
 from keras.models import Model
 from keras.optimizers import Adam
-import src.preprocessing as preprocessing
-import src.model_utils as model_utils
+import preprocessing as preprocessing
+import model_utils as model_utils
 
 # https://www.kaggle.com/lamdang/dl-models
 def create_model(pretrained_embedding,

@@ -1,9 +1,9 @@
 from keras import Model, Input
 from keras.layers import Average
 
-import src.gru as gru
-import src.dec_att as dec_att
-import src.esim as esim
+import gru as gru
+import dec_att as dec_att
+import esim as esim
 
 
 def create_ensemble(word_embedding_matrix, maxlen, embeddings, sent_embed,

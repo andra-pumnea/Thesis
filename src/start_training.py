@@ -13,14 +13,14 @@ from keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import StratifiedKFold
 
-import src.preprocessing as preprocessing
-import src.model_utils as model_utils
-import src.vocab as vocab
-import src.dec_att as dec_att
-import src.esim as esim
-import src.gru as gru
-import src.ensembling as ensembling
-import src.namespace_utils as namespace_utils
+import preprocessing as preprocessing
+import model_utils as model_utils
+import vocab as vocab
+import dec_att as dec_att
+import esim as esim
+import gru as gru
+import ensembling as ensembling
+import namespace_utils as namespace_utils
 import numpy as np
 import tensorflow as tf
 import random as rn
