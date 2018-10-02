@@ -106,6 +106,8 @@ def run(FLAGS):
     filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
     if mode == "ensemble":
         print("Create ensemble of models")
+        error = evaluate_error(net, q1_test, q2_test, y_test, raw1_test, raw2_test)
+        print("Error after ensembling 0:.4f}:".format(error))
     elif mode == "load":
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
@@ -219,8 +221,7 @@ def get_best(history):
 
 
 def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath):
-    if FLAGS.model != 'ensemble':
-        model.load_weights(filepath)
+    model.load_weights(filepath)
 
     scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
     loss = scores[1]
@@ -228,6 +229,14 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, f
     f1_score = scores[3]
     # print(scores)
     return loss, accuracy, f1_score
+
+
+def evaluate_error(model, q1_test, q2_test, y_test, raw1_test, raw2_test,):
+    pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
+    pred = np.argmax(pred, axis=1)
+    pred = np.expand_dims(pred, axis=1) # make same shape as y_test
+    error = np.sum(np.not_equal(pred, y_test)) / y_test.shape[0]
+    return error
 
 
 def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test):
