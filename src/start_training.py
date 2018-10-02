@@ -113,11 +113,6 @@ def run(FLAGS):
         net = freeze_layers(net)
         net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
-    elif mode == "load":
-        print("Loading weights from %s" % filepath)
-        net.load_weights(filepath)
-        net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
-                    metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
         t0 = time.time()
         callbacks = get_callbacks(filepath)
         history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
@@ -127,14 +122,19 @@ def run(FLAGS):
                           shuffle=True,
                           callbacks=callbacks)
 
-        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (FLAGS.task, model, experiment, embeddings, sent_embed)
+        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
+        FLAGS.task, model, experiment, embeddings, sent_embed)
         with open(pickle_file, 'wb') as handle:
             pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         t1 = time.time()
         print("Training ended at", datetime.datetime.now())
         print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
-
+    elif mode == "load":
+        print("Loading weights from %s" % filepath)
+        net.load_weights(filepath)
+        net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+                    metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     elif mode == "training":
         # Start training
         print("Starting training at", datetime.datetime.now())
