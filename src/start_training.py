@@ -10,7 +10,7 @@ from keras.callbacks import History, ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
 from keras import backend as K, Input
 from keras.utils import to_categorical
-from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
 import preprocessing as preprocessing
@@ -106,8 +106,6 @@ def run(FLAGS):
     filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
     if mode == "ensemble":
         print("Create ensemble of models")
-        error = evaluate_error(net, q1_test, q2_test, y_test, raw1_test, raw2_test)
-        print("Error after ensembling 0:.4f}:".format(error))
     elif mode == "load":
         print("Loading weights from %s" % filepath)
         net.load_weights(filepath)
@@ -139,6 +137,9 @@ def run(FLAGS):
         print("------------Unknown mode------------")
 
     get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test)
+    error = evaluate_error(q1_test, q2_test, raw1_test, raw2_test, y_test)
+    print("Error: {:.4f}".format(error))
+
     predictions = find_prediction_probability(net, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test)
     write_predictions(predictions)
 
@@ -199,6 +200,7 @@ def ensemble_models(model_input, word_embedding_matrix):
                                         decatt_file, esim_file, gru_file)
     return models
 
+
 def get_intermediate_layer(net):
     # interm_layer = net.get_layer(layer_name).output
     inp = net.input  # input placeholder
@@ -223,7 +225,7 @@ def get_best(history):
 def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath):
     model.load_weights(filepath)
 
-    scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
+    scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=FLAGS.batch_size)
     loss = scores[1]
     accuracy = scores[2]
     f1_score = scores[3]
@@ -231,8 +233,8 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, f
     return loss, accuracy, f1_score
 
 
-def evaluate_error(model, q1_test, q2_test, y_test, raw1_test, raw2_test,):
-    pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=50)
+def evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
+    pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=FLAGS.batch_size)
     pred = np.argmax(pred, axis=1)
     pred = np.expand_dims(pred, axis=1) # make same shape as y_test
     error = np.sum(np.not_equal(pred, y_test)) / y_test.shape[0]
@@ -248,6 +250,9 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test):
     print("Classification report:")
     target_names = ['non_duplicate', 'duplicate']
     print(classification_report(y_test, y_pred, target_names=target_names))
+
+    score = accuracy_score(y_test, y_pred)
+    print("Accuracy : ".format(score))
 
 
 def find_prediction_probability(model, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test):
@@ -267,6 +272,12 @@ def get_predictions(model, q1_test, q2_test, raw1_test, raw2_test):
     y_pred = y_pred.astype(int)
 
     return y_pred
+
+
+def compute_accuracy_score(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
+    y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test)
+    score = accuracy_score(y_test, y_pred)
+    return score
 
 
 def write_predictions(question_pred):
