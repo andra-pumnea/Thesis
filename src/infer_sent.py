@@ -21,12 +21,10 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
                                     out_dim,
                                     weights=[word_embedding_matrix],
                                     input_length=maxlen,
-                                    trainable=True)
+                                    trainable=False)
         # Embedded version of the inputs
         encoded_q1 = embedding_layer(model_input[0])
         encoded_q2 = embedding_layer(model_input[1])
-        encoded_q1 = TimeDistributed(Dense(out_dim, activation='relu'))(encoded_q1)
-        encoded_q2 = TimeDistributed(Dense(out_dim, activation='relu'))(encoded_q2)
     else:
         encoded_q1 = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[0])
         encoded_q2 = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[1])
@@ -72,28 +70,3 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
     net.compile(optimizer=SGD(lr=lr), loss='binary_crossentropy',
                 metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
     return net
-
-
-# net.summary()
-def run_gru():
-    train_file = 'Quora_question_pair_partition/train.tsv'
-    dev_file = 'Quora_question_pair_partition/dev.tsv'
-    test_file = 'Quora_question_pair_partition/test.tsv'
-
-    # Prepare datasets
-    q1_train, q2_train, y_train, emb_matrix = preprocessing.prepare_dataset(train_file, 1)
-    q1_dev, q2_dev, y_dev = preprocessing.prepare_dataset(dev_file)
-    q1_test, q2_test, y_test = preprocessing.prepare_dataset(test_file)
-
-    net = create_model(emb_matrix)
-    # Start training
-    hist = net.fit([q1_train, q2_train], y_train,
-                   validation_data=([q1_dev, q2_dev], y_dev),
-                   batch_size=4, nb_epoch=20, shuffle=True, )
-
-    # compute final accuracy on training and test sets
-    scores = net.evaluate([q1_test, q2_test], y_test)
-    print("\n%s: %.2f%%" % (net.metrics_names[2], scores[2] * 100))
-
-    # print(hist.history['acc'])
-    # print(hist.history['val_acc'])
