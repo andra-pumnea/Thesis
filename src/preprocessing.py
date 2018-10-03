@@ -151,8 +151,10 @@ def get_tfidf_embedding_matrix(embeddings_index, word_index, max_nb_words, word2
     for word, i in word_index.items():
         if i > max_nb_words:
             continue
-        embedding_vector = embeddings_index.get(word) * word2weight[word]
+        embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
+            print(word2weight[word])
+            embedding_vector = embedding_vector * word2weight[word]
             word_embedding_matrix[i] = embedding_vector
 
     print('Null word embeddings: %d' % np.sum(np.sum(word_embedding_matrix, axis=1) == 0))
