@@ -4,7 +4,7 @@ import preprocessing as preprocessing
 import model_utils as model_utils
 from keras.models import Model
 from keras.layers import TimeDistributed, Embedding, Lambda, Dense, concatenate, BatchNormalization, Bidirectional, \
-    LSTM, Dropout, GaussianNoise, MaxPooling1D
+    LSTM, Dropout, GaussianNoise, GlobalMaxPooling1D, MaxPooling1D
 from keras.optimizers import SGD
 from keras import regularizers
 from keras.callbacks import History
@@ -39,10 +39,13 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
         [sent1_dense, sent2_dense])
 
     shared_layer = Bidirectional(LSTM(n_hidden, kernel_initializer='glorot_uniform'))
-    max_pool = MaxPooling1D()(shared_layer)
+    max_pool = MaxPooling1D()
 
-    output_q1 = max_pool(encoded_q1)
-    output_q2 = max_pool(encoded_q2)
+    output_q1 = shared_layer(encoded_q1)
+    output_q2 = shared_layer(encoded_q2)
+
+    output_q1 = max_pool(output_q1)
+    output_q2 = max_pool(output_q2)
 
     # output_q1 = GaussianNoise(0.01)(output_q1)
     # output_q2 = GaussianNoise(0.01)(output_q2)
