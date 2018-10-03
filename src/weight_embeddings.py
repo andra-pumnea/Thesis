@@ -2,10 +2,11 @@
 from collections import defaultdict
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.tokenize import word_tokenize
 
 
 def tfidf_fit(X):
-    tfidf = TfidfVectorizer(analyzer=lambda x: x, stop_words='english', ngram_range=1, tokenizer='word')
+    tfidf = TfidfVectorizer(stop_words='english', tokenizer=word_tokenize)
     tfidf.fit(X)
 
     # Taken as a consideration
