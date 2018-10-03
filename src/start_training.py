@@ -19,6 +19,7 @@ import vocab as vocab
 import dec_att as dec_att
 import esim as esim
 import gru as gru
+import infer_sent
 import ensembling as ensembling
 import namespace_utils as namespace_utils
 import numpy as np
@@ -212,6 +213,8 @@ def create_model(word_embedding_matrix):
         net = esim.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "gru":
         net = gru.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
+    elif model == "infer_sent":
+        net = infer_sent.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
     elif model == "ensemble":
         models = ensemble_models(model_input, word_embedding_matrix)
         net = ensembling.ensemble(model_input, models)
