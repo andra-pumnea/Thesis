@@ -267,6 +267,11 @@ def squared_difference(vecs):
     return K.sum(K.square(x - y), axis=-1, keepdims=True)
 
 
+def abs_difference(vecs):
+    x, y = vecs
+    return K.sum(K.abs(x - y), axis=-1, keepdims=True)
+
+
 def multiplication(vecs):
     x, y = vecs
     print(K.shape(x), K.shape(y))

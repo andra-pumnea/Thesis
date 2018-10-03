@@ -38,8 +38,8 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
     distance_sent = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
 
-    shared_layer = Bidirectional(LSTM(n_hidden, kernel_initializer='glorot_uniform'))
-    max_pool = MaxPooling1D()
+    shared_layer = Bidirectional(LSTM(n_hidden, kernel_initializer='glorot_uniform', return_sequences=True))
+    max_pool = GlobalMaxPooling1D()
 
     output_q1 = shared_layer(encoded_q1)
     output_q2 = shared_layer(encoded_q2)
@@ -50,14 +50,14 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
     # output_q1 = GaussianNoise(0.01)(output_q1)
     # output_q2 = GaussianNoise(0.01)(output_q2)
 
-    squared_diff = Lambda(preprocessing.squared_difference, output_shape=preprocessing.get_shape)(
+    abs_diff = Lambda(preprocessing.abs_difference, output_shape=preprocessing.get_shape)(
         [output_q1, output_q2])
     mult = Lambda(preprocessing.multiplication, output_shape=preprocessing.get_shape)([output_q1, output_q2])
 
     if sent_embed == 'univ_sent':
-        merged = concatenate([output_q1, output_q2, squared_diff, mult, distance_sent])
+        merged = concatenate([output_q1, output_q2, abs_diff, mult, distance_sent])
     else:
-        merged = concatenate([output_q1, output_q2, squared_diff, mult])
+        merged = concatenate([output_q1, output_q2, abs_diff, mult])
 
     merged = Dense(n_hidden, activation='relu')(merged)
     merged = Dropout(0.1)(merged)
