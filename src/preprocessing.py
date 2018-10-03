@@ -170,7 +170,7 @@ def pad_sentences(question1_word_sequences, question2_word_sequences, is_duplica
     return q1_data, q2_data, labels
 
 
-def init_embeddings(w_index, max_nb_words, task, experiment, embeddings, weight='tf_idf'):
+def init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight, weight='tf_idf'):
     cache_filename = "embedding_matrix/%s.%s.%s.min.cache.npy" % (task, experiment, embeddings)
 
     if exists(cache_filename):
@@ -182,7 +182,6 @@ def init_embeddings(w_index, max_nb_words, task, experiment, embeddings, weight=
         if weight != 'tf_idf':
             word_embedding_matrix = get_embedding_matrix(embeddings_index, w_index, max_nb_words)
         else:
-            word2weight = weight_embeddings.tfidf_fit()
             word_embedding_matrix = get_tfidf_embedding_matrix(embeddings_index, w_index, max_nb_words, word2weight)
         np.save(cache_filename, word_embedding_matrix)
     return word_embedding_matrix
@@ -243,7 +242,9 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, embeddings
     q1_raw, q2_raw = prepare_sentence_enc(question1, question2)
 
     if train == 1:
-        word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
+        qs = question1 + question2
+        word2weight = weight_embeddings.tfidf_fit(qs)
+        word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight)
         return Q1, Q2, y, qid, q1_raw, q2_raw, word_embedding_matrix
     else:
         return Q1, Q2, y, qid, q1_raw, q2_raw
