@@ -44,8 +44,8 @@ session_conf = tf.ConfigProto(
 # Force Tensorflow to use a single thread
 sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 K.set_session(sess)
-sess.run(tf.global_variables_initializer())
-sess.run(tf.tables_initializer())
+# sess.run(tf.global_variables_initializer())
+# sess.run(tf.tables_initializer())
 
 
 def run(FLAGS):

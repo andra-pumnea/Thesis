@@ -4,6 +4,28 @@ from keras.models import Model
 from keras.optimizers import Adam
 import preprocessing as preprocessing
 import model_utils as model_utils
+import tensorflow as tf
+import tensorflow_hub as hub
+
+sess = tf.Session()
+K.set_session(sess)
+
+elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
+
+sess.run(tf.global_variables_initializer())
+sess.run(tf.tables_initializer())
+
+batch_size = 50
+max_len = 40
+
+
+def ElmoEmbedding(x):
+    return elmo_model(inputs={
+        "tokens": tf.squeeze(tf.cast(x, tf.string)),
+        "sequence_len": tf.constant(batch_size * [max_len])
+    },
+        signature="tokens",
+        as_dict=True)["elmo"]
 
 
 # https://www.kaggle.com/lamdang/dl-models
