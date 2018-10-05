@@ -14,18 +14,14 @@ def UniversalEmbedding(x):
     return univ_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
 
 
-# def ElmoEmbedding(x):
-#     return elmo_model(inputs={
-#         "tokens": tf.squeeze(tf.cast(x, tf.string)),
-#         "sequence_len": tf.constant(batch_size * [max_len])
-#     },
-#         signature="tokens",
-#         as_dict=True)["elmo"]
-
 def ElmoEmbedding(x):
-    return elmo_model(tf.squeeze(tf.cast(x, tf.string)),
-                      signature="default",
-                      as_dict=True)["default"]
+    return elmo_model(inputs={
+        "tokens": tf.squeeze(tf.cast(x, tf.string)),
+        "sequence_len": tf.constant(batch_size * [max_len])
+    },
+        signature="tokens",
+        as_dict=True)["elmo"]
+
 
 def create_pretrained_embedding(pretrained_weights, trainable=False, **kwargs):
     "Create embedding layer from a pretrained weights array"
