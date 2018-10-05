@@ -22,8 +22,8 @@ def create_model(model_input, pretrained_embedding, maxlen=30, embeddings='glove
         q1_embed = embedding(model_input[0])
         q2_embed = embedding(model_input[1])
     else:
-        q1_embed = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[0])
-        q2_embed = Lambda(model_utils.ElmoEmbedding, output_shape=(maxlen, 1024))(model_input[1])
+        q1_embed = Lambda(model_utils.ElmoEmbedding, output_shape=(1024, ))(model_input[2])
+        q2_embed = Lambda(model_utils.ElmoEmbedding, output_shape=(1024, ))(model_input[3])
 
     q1_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[2])
     q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[3])
