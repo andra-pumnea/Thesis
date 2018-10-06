@@ -7,6 +7,7 @@ import datetime
 import time
 
 from keras.callbacks import History, ModelCheckpoint, EarlyStopping
+from keras.layers import Dense
 from keras.optimizers import Adam
 from keras import backend as K, Input
 from keras.utils import to_categorical
@@ -112,7 +113,7 @@ def run(FLAGS):
         print("Loading pre-trained model from %s:" % model_file)
         net.load_weights(model_file)
         net = freeze_layers(net)
-        net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+        net.compile(optimizer=Adam(lr=1e-5), loss='binary_crossentropy',
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
         t0 = time.time()
         callbacks = get_callbacks(filepath)
@@ -125,6 +126,30 @@ def run(FLAGS):
 
         pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
         FLAGS.task, model, experiment, embeddings, sent_embed)
+        with open(pickle_file, 'wb') as handle:
+            pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        t1 = time.time()
+        print("Training ended at", datetime.datetime.now())
+        print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
+    elif mode == "transfer_learning":
+        model_file = "models/weights.best.snli.esim.hdf5"
+        print("Loading pre-trained model from %s:" % model_file)
+        net.load_weights(model_file)
+        net = replace_layer(net)
+        net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+                    metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
+        t0 = time.time()
+        callbacks = get_callbacks(filepath)
+        history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
+                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
+                          batch_size=FLAGS.batch_size,
+                          nb_epoch=FLAGS.max_epochs,
+                          shuffle=True,
+                          callbacks=callbacks)
+
+        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
+            FLAGS.task, model, experiment, embeddings, sent_embed)
         with open(pickle_file, 'wb') as handle:
             pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -224,6 +249,14 @@ def create_model(word_embedding_matrix):
 def freeze_layers(model):
     for layer in model.layers[0:-1]:
         layer.trainable = False
+    return model
+
+
+def replace_layer(model):
+    model.layers.pop()
+    model.outputs = [model.layers[-1].output]
+    model.layers[-1].outbound_nodes = []
+    model.add(Dense(1, activation='sigmoid'))
     return model
 
 
