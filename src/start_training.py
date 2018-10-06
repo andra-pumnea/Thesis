@@ -13,6 +13,7 @@ from keras import backend as K, Input
 from keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
+from keras.models import Model
 
 import preprocessing as preprocessing
 import model_utils as model_utils
@@ -256,8 +257,11 @@ def replace_layer(model):
     model.layers.pop()
     model.outputs = [model.layers[-1].output]
     model.layers[-1].outbound_nodes = []
-    model.add(Dense(1, activation='sigmoid'))
-    return model
+    output = model.get_layer('dropout_2').output
+    # output = Flatten()(output)
+    output = Dense(1, activation='sigmoid')(output)
+    new_model = Model(model.input, output)
+    return new_model
 
 
 def ensemble_models(model_input, word_embedding_matrix):
