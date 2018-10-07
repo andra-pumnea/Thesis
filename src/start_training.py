@@ -270,8 +270,7 @@ def ensemble_models(model_input, word_embedding_matrix):
     sent_embed = FLAGS.sent_embed
     experiment = FLAGS.experiment
 
-    decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (
-    FLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
+    decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (cFLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
     esim_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'esim', experiment, embeddings, sent_embed)
     gru_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'gru', experiment, embeddings, sent_embed)
     models = ensembling.create_ensemble(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed,
