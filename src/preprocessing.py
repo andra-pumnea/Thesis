@@ -153,7 +153,6 @@ def get_tfidf_embedding_matrix(embeddings_index, word_index, max_nb_words, word2
             continue
         embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
-            print(word2weight[word])
             embedding_vector = embedding_vector * word2weight[word]
             word_embedding_matrix[i] = embedding_vector
 
@@ -174,6 +173,7 @@ def pad_sentences(question1_word_sequences, question2_word_sequences, is_duplica
 
 def init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight, weight='tf_idf'):
     cache_filename = "embedding_matrix/%s.%s.%s.min.cache.npy" % (task, experiment, embeddings)
+    # cache_filename = "embedding_matrix/snli.min.cache.npy"
 
     if exists(cache_filename):
         word_embedding_matrix = np.load(cache_filename)

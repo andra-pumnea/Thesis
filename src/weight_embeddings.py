@@ -6,7 +6,7 @@ from nltk.tokenize import word_tokenize
 
 
 def tfidf_fit(X):
-    tfidf = TfidfVectorizer(stop_words='english', tokenizer=word_tokenize)
+    tfidf = TfidfVectorizer(analyzer="word", stop_words='english', binary=False, ngram_range=(1,1),  tokenizer=word_tokenize)
     tfidf.fit(X)
 
     # Taken as a consideration
