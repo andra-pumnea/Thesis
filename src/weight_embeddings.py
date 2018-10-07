@@ -87,7 +87,7 @@ def map_word_frequency(document):
     return Counter(itertools.chain(*document))
 
 
-def sentence2vec(tokenised_sentence_list, embedding_size, word_emb_model, a=1e-3):
+def sentence2vec(tokenised_sentence_list, word_emb_model, embedding_size=300, a=1e-3):
     """
     Computing weighted average of the word vectors in the sentence;
     remove the projection of the average vectors on their first principal component.

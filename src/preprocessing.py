@@ -256,7 +256,8 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, embeddings
 
 def sif_sentence_enc(question1, question2, embed_matrix, embedding_size=300):
     qs = question1 + question2
-    matrix = weight_embeddings.sentence2vec(qs, embed_matrix, embedding_size)
+    embed_index = get_embeddings('glove')
+    matrix = weight_embeddings.sentence2vec(qs, embed_index, embedding_size)
     print(matrix.shape)
 
     with open('sif_sentences.pickle', 'wb') as handle:
