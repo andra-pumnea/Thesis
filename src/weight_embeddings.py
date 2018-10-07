@@ -1,6 +1,7 @@
-from collections import defaultdict
+import itertools
+from collections import defaultdict, Counter
 import numpy as np
-from sklearn.decomposition import TruncatedSVD
+from sklearn.decomposition import TruncatedSVD, PCA
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from nltk.tokenize import word_tokenize
 
@@ -27,7 +28,7 @@ def tfidf_transform(X, embeddings, word2weight):
     ])
 
 
-def fit_transform(X, embeddings):
+def tfidf_fit_transform(X, embeddings):
     word2weight = tfidf_fit(X)
     return tfidf_transform(X, embeddings, word2weight)
 
@@ -81,3 +82,46 @@ def sif_transform(X, embeddings, nb_words):
     print(Xr.shape)
     return Xr
 
+
+def map_word_frequency(document):
+    return Counter(itertools.chain(*document))
+
+
+def sentence2vec(tokenised_sentence_list, embedding_size, word_emb_model, a=1e-3):
+    """
+    Computing weighted average of the word vectors in the sentence;
+    remove the projection of the average vectors on their first principal component.
+    Borrowed from https://github.com/peter3125/sentence2vec; now compatible with python 2.7
+    """
+
+    word_counts = map_word_frequency(tokenised_sentence_list)
+    sentence_set = []
+    for sentence in tokenised_sentence_list:
+        vs = np.zeros(embedding_size)
+        sentence_length = len(sentence)
+        for word in sentence:
+            a_value = a / (a + word_counts[word])  # smooth inverse frequency, SIF
+        try:
+            vs = np.add(vs, np.multiply(a_value, word_emb_model[word]))  # vs += sif * word_vector
+        except:
+            pass
+        vs = np.divide(vs, sentence_length)  # weighted average
+        sentence_set.append(vs)
+
+    # calculate PCA of this sentence set
+    pca = PCA(n_components=embedding_size)
+    pca.fit(np.array(sentence_set))
+    u = pca.explained_variance_ratio_  # the PCA vector
+    u = np.multiply(u, np.transpose(u))  # u x uT
+
+    if len(u) < embedding_size:
+        for i in range(embedding_size - len(u)):
+            u = np.append(u, 0)  # add needed extension for multiplication below
+
+    # resulting sentence vectors, vs = vs - u x uT x vs
+    sentence_vecs = []
+    for vs in sentence_set:
+        sub = np.multiply(u, vs)
+        sentence_vecs.append(np.subtract(vs, sub))
+
+    return sentence_vecs
