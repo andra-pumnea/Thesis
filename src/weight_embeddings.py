@@ -48,6 +48,7 @@ def prepare_vocab(X, nb_words):
     sent_lens = np.sum(Xc, axis=1).astype("float")
     sent_lens[sent_lens == 0] = 1e-14
     print(sent_lens.shape)
+    return Xc, sent_lens
 
 
 def compute_svd(Xs):
@@ -56,6 +57,7 @@ def compute_svd(Xs):
     svd.fit(Xs)
     pc = svd.components_
     print(pc.shape, svd.explained_variance_ratio_)
+    return pc
 
 
 def sif_transform(X, embeddings, nb_words):
