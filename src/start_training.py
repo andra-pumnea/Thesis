@@ -114,7 +114,7 @@ def run(FLAGS):
         print("Loading pre-trained model from %s:" % model_file)
         net.load_weights(model_file)
         net = freeze_layers(net)
-        net.compile(optimizer=Adam(lr=1e-5), loss='binary_crossentropy',
+        net.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy',
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
         t0 = time.time()
         callbacks = get_callbacks(filepath)
@@ -138,7 +138,7 @@ def run(FLAGS):
         print("Loading pre-trained model from %s:" % model_file)
         net.load_weights(model_file)
         net = replace_layer(net)
-        net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+        net.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy',
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
         t0 = time.time()
         callbacks = get_callbacks(filepath)
@@ -200,7 +200,7 @@ def run(FLAGS):
     # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
-    if mode == "training" or mode == "fine-tuning":
+    if mode == "training" or mode == "fine-tuning" or mode == "transfer_learning":
         test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test,
                                                            filepath)
     else:
