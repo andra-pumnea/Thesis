@@ -254,17 +254,26 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, embeddings
         return Q1, Q2, y, qid, q1_raw, q2_raw
 
 
-def sif_sentence_enc(question1, question2, embed_matrix, nb_words):
+def sif_sentence_enc(question1, question2, embed_matrix, embedding_size=300):
     qs = question1 + question2
-    x = weight_embeddings.sif_transform(qs, embed_matrix, nb_words)
-    print(x.shape)
+    matrix = weight_embeddings.sentence2vec(qs, embed_matrix, embedding_size)
+    print(matrix.shape)
+
+    with open('sif_sentences.pickle', 'wb') as handle:
+        pickle.dump(matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    q1_sent = matrix[:len(question1)]
+    q2_sent = matrix[:len(question2)]
+    print(q1_sent.shape)
+    print(q2_sent.shape)
+
 
 
 def tfidf_sentence_enc(question1, question2, embed_matrix):
     qs = question1 + question2
     matrix = weight_embeddings.tfidf_fit_transform(qs, embed_matrix)
-
-    with open('tfidf_sentences.pickle', 'rb') as handle:
+    print(matrix.shape)
+    with open('tfidf_sentences.pickle', 'wb') as handle:
         pickle.dump(matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     q1_sent = matrix[:len(question1)]
