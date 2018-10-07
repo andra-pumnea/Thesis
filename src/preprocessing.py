@@ -247,9 +247,23 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, embeddings
         qs = question1 + question2
         word2weight = weight_embeddings.tfidf_fit(qs)
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight)
+        sif_sentence_enc(question1, question2, word_embedding_matrix, max_nb_words)
+        tfidf_sentence_enc(question1, question2, word_embedding_matrix, word2weight)
         return Q1, Q2, y, qid, q1_raw, q2_raw, word_embedding_matrix
     else:
         return Q1, Q2, y, qid, q1_raw, q2_raw
+
+
+def sif_sentence_enc(question1, question2, embed_matrix, nb_words):
+    qs = question1 + question2
+    x = weight_embeddings.sif_transform(qs, embed_matrix, nb_words)
+    print(x.shape)
+
+
+def tfidf_sentence_enc(question1, question2, embed_matrix, word2weight):
+    qs = question1 + question2
+    x = weight_embeddings.fit_transform(qs, embed_matrix, word2weight)
+    print(x.shape)
 
 
 def prepare_sentence_enc(question1, question2):
