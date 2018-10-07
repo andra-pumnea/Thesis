@@ -46,8 +46,8 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
     output_q1 = shared_layer(encoded_q1)
     output_q2 = shared_layer(encoded_q2)
 
-    output_q1 = GaussianNoise(0.01)(output_q1)
-    output_q2 = GaussianNoise(0.01)(output_q2)
+    # output_q1 = GaussianNoise(0.01)(output_q1)
+    # output_q2 = GaussianNoise(0.01)(output_q2)
 
     squared_diff = Lambda(preprocessing.squared_difference, output_shape=preprocessing.get_shape)([output_q1, output_q2])
     mult = Lambda(preprocessing.multiplication, output_shape=preprocessing.get_shape)([output_q1, output_q2])
@@ -67,7 +67,8 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
     merged = BatchNormalization()(merged)
    # merged = Dense(1, activation='sigmoid')(merged)
    # merged = BatchNormalization()(merged)
-
+   #  output = Dense(3, activation='sigmoid', kernel_regularizer=regularizers.l2(0.0001),
+                   # bias_regularizer=regularizers.l2(0.0001))(merged)
     output = Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.0001),
                    bias_regularizer=regularizers.l2(0.0001))(merged)
 
