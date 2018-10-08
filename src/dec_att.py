@@ -32,10 +32,12 @@ def create_model(model_input, pretrained_embedding, maxlen=30, embeddings='glove
     distance1 = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
 
-    q1_tfidf = LSTM(100, input_shape=(max_sent, 300))(model_input[4])
-    q2_tfidf = LSTM(100, input_shape=(max_sent, 300))(model_input[5])
-    distance2 = Lambda(preprocessing.exponent_neg_manhattan_distance, output_shape=preprocessing.get_shape)(
-        [q1_tfidf, q2_tfidf])
+    lstm = LSTM(100)
+
+    lstm_out_q1 = lstm(model_input[4])
+    lstm_out_q2 = lstm(model_input[5])
+    distance2 = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
+        [lstm_out_q1, lstm_out_q2])
 
     # q1_embed = GaussianNoise(0.01)(q1_embed)
     # q2_embed = GaussianNoise(0.01)(q2_embed)

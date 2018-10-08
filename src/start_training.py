@@ -234,8 +234,8 @@ def create_model(word_embedding_matrix):
     q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
     q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
 
-    q1_tfidf = Input(name='q1_sent', shape=(384348, 300))
-    q2_tfidf = Input(name='q2_sent', shape=(384348, 300))
+    q1_tfidf = Input(name='q1_tfidf', shape=(1, 300,))
+    q2_tfidf = Input(name='q2_tfidf', shape=(1, 300,))
 
     model_input = [q1, q2, q1_sent, q2_sent, q1_tfidf, q2_tfidf]
 
