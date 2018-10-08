@@ -269,7 +269,6 @@ def sif_sentence_enc(question1, question2, embed_matrix, embedding_size=300):
     print(q2_sent.shape)
 
 
-
 def tfidf_sentence_enc(question1, question2, embed_matrix):
     qs = question1 + question2
     matrix = weight_embeddings.tfidf_fit_transform(qs, embed_matrix)

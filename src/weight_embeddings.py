@@ -97,7 +97,7 @@ def sentence2vec(tokenised_sentence_list, word_emb_model, embedding_size=300, a=
     word_counts = map_word_frequency(tokenised_sentence_list)
     sentence_set = []
     for sentence in tokenised_sentence_list:
-        vs = np.zeros(300)
+        vs = np.zeros(embedding_size)
         sentence_length = len(sentence)
         for word in sentence:
             a_value = a / (a + word_counts[word])  # smooth inverse frequency, SIF
@@ -109,7 +109,7 @@ def sentence2vec(tokenised_sentence_list, word_emb_model, embedding_size=300, a=
         sentence_set.append(vs)
 
     # calculate PCA of this sentence set
-    pca = PCA(n_components=300)
+    pca = PCA(n_components=embedding_size)
     pca.fit(np.array(sentence_set))
     u = pca.explained_variance_ratio_  # the PCA vector
     u = np.multiply(u, np.transpose(u))  # u x uT
@@ -123,6 +123,5 @@ def sentence2vec(tokenised_sentence_list, word_emb_model, embedding_size=300, a=
     for vs in sentence_set:
         sub = np.multiply(u, vs)
         sentence_vecs.append(np.subtract(vs, sub))
-
     sentence_vecs = np.reshape(sentence_vecs, (len(tokenised_sentence_list), 300))
     return sentence_vecs
