@@ -11,7 +11,7 @@ def create_model(model_input, pretrained_embedding, maxlen=30, embeddings='glove
                  projection_dim=300, projection_hidden=0, projection_dropout=0.2,
                  compare_dim=500, compare_dropout=0.2,
                  dense_dim=300, dense_dropout=0.2,
-                 lr=1e-3, activation='elu'):
+                 lr=1e-3, activation='elu', max_sent=384348):
     # Based on: https://arxiv.org/abs/1606.01933
 
     if embeddings != 'elmo':
@@ -29,8 +29,13 @@ def create_model(model_input, pretrained_embedding, maxlen=30, embeddings='glove
     q2_embed_sent = Lambda(model_utils.UniversalEmbedding, output_shape=(512,))(model_input[3])
     sent1_dense = Dense(256, activation='relu')(q1_embed_sent)
     sent2_dense = Dense(256, activation='relu')(q2_embed_sent)
-    distance = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
+    distance1 = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
+
+    q1_tfidf = LSTM(100, input_shape=(max_sent, 300))(model_input[4])
+    q2_tfidf = LSTM(100, input_shape=(max_sent, 300))(model_input[5])
+    distance2 = Lambda(preprocessing.exponent_neg_manhattan_distance, output_shape=preprocessing.get_shape)(
+        [q1_tfidf, q2_tfidf])
 
     # q1_embed = GaussianNoise(0.01)(q1_embed)
     # q2_embed = GaussianNoise(0.01)(q2_embed)
@@ -70,7 +75,9 @@ def create_model(model_input, pretrained_embedding, maxlen=30, embeddings='glove
 
     # Classifier
     if sent_embed == 'univ_sent':
-        merged = Concatenate()([q1_rep, q2_rep, distance])
+        merged = Concatenate()([q1_rep, q2_rep, distance1])
+    elif sent_embed == 'tfidf':
+        merged = Concatenate()([q1_rep, q2_rep, distance2])
     else:
         merged = Concatenate()([q1_rep, q2_rep])
     dense = BatchNormalization()(merged)

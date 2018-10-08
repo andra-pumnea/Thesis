@@ -171,7 +171,7 @@ def pad_sentences(question1_word_sequences, question2_word_sequences, is_duplica
     return q1_data, q2_data, labels
 
 
-def init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight, weight='tf_idf'):
+def init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight, weight='no_tf_idf'):
     cache_filename = "embedding_matrix/%s.%s.%s.min.cache.npy" % (task, experiment, embeddings)
     # cache_filename = "embedding_matrix/snli.min.cache.npy"
 
@@ -242,19 +242,20 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, embeddings
     Q1 = X[:, 0]
     Q2 = X[:, 1]
     q1_raw, q2_raw = prepare_sentence_enc(question1, question2)
+    q1_tfidf, q2_tfidf = tfidf_sentence_enc(question1, question2)
+
 
     if train == 1:
         qs = question1 + question2
         word2weight = weight_embeddings.tfidf_fit(qs)
         word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight)
         sif_sentence_enc(question1, question2, word_embedding_matrix, max_nb_words)
-        tfidf_sentence_enc(question1, question2, word_embedding_matrix)
-        return Q1, Q2, y, qid, q1_raw, q2_raw, word_embedding_matrix
+        return Q1, Q2, y, qid, q1_raw, q2_raw, q1_tfidf, q2_tfidf, word_embedding_matrix
     else:
-        return Q1, Q2, y, qid, q1_raw, q2_raw
+        return Q1, Q2, y, qid, q1_raw, q2_raw, q1_tfidf, q2_tfidf
 
 
-def sif_sentence_enc(question1, question2, embed_matrix, embedding_size=300):
+def sif_sentence_enc(question1, question2, embedding_size=300):
     qs = question1 + question2
     embed_index = get_embeddings('glove')
     matrix = weight_embeddings.sentence2vec(qs, embed_index, embedding_size)
@@ -269,17 +270,22 @@ def sif_sentence_enc(question1, question2, embed_matrix, embedding_size=300):
     print(q2_sent.shape)
 
 
-def tfidf_sentence_enc(question1, question2, embed_matrix):
+#when generating the encoding, the embedding_matrix is needed
+def tfidf_sentence_enc(question1, question2):
     qs = question1 + question2
-    matrix = weight_embeddings.tfidf_fit_transform(qs, embed_matrix)
-    print(matrix.shape)
-    with open('tfidf_sentences.pickle', 'wb') as handle:
-        pickle.dump(matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # matrix = weight_embeddings.tfidf_fit_transform(qs, embed_matrix)
+    # print(matrix.shape)
+    # with open('tfidf_sentences.pickle', 'wb') as handle:
+    #     pickle.dump(matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open('ttfidf_sentences.pickle', 'rb') as handle:
+        matrix = pickle.load(handle)
 
     q1_sent = matrix[:len(question1)]
     q2_sent = matrix[:len(question2)]
     print(q1_sent.shape)
     print(q2_sent.shape)
+    return q1_sent, q2_sent
 
 
 def prepare_sentence_enc(question1, question2):

@@ -73,7 +73,7 @@ def run(FLAGS):
 
     # Prepare datasets
     if init_embeddings == 1:
-        q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train, word_embedding_matrix = preprocessing.prepare_dataset(
+        q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train, q1_tfidf_train, q2_tfidf_train, word_embedding_matrix = preprocessing.prepare_dataset(
             train_file,
             maxlen,
             max_nb_words,
@@ -82,21 +82,24 @@ def run(FLAGS):
             embeddings,
             init_embeddings)
     else:
-        q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train = preprocessing.prepare_dataset(train_file,
-                                                                                                       maxlen,
-                                                                                                       max_nb_words,
-                                                                                                       experiment,
-                                                                                                       dataset,
-                                                                                                       embeddings,
-                                                                                                       init_embeddings)
+        q1_train, q2_train, y_train, qid_train, raw1_train, raw2_train, q1_tfidf_train, q2_tfidf_train = preprocessing.prepare_dataset(
+            train_file,
+            maxlen,
+            max_nb_words,
+            experiment,
+            dataset,
+            embeddings,
+            init_embeddings)
         word_embedding_matrix = np.zeros(1)
 
-    q1_dev, q2_dev, y_dev, qid_dev, raw1_dev, raw2_dev = preprocessing.prepare_dataset(dev_file, maxlen, max_nb_words,
-                                                                                       experiment,
-                                                                                       dataset, embeddings)
-    q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test = preprocessing.prepare_dataset(test_file, maxlen,
-                                                                                             max_nb_words, experiment,
-                                                                                             dataset, embeddings)
+    q1_dev, q2_dev, y_dev, qid_dev, raw1_dev, raw2_dev, q1_tfidf_dev, q2_tfidf_dev = preprocessing.prepare_dataset(
+        dev_file, maxlen, max_nb_words,
+        experiment,
+        dataset, embeddings)
+    q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test = preprocessing.prepare_dataset(
+        test_file, maxlen,
+        max_nb_words, experiment,
+        dataset, embeddings)
 
     if dataset == 'snli':
         y_train = to_categorical(y_train, num_classes=None)
@@ -118,15 +121,15 @@ def run(FLAGS):
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
         t0 = time.time()
         callbacks = get_callbacks(filepath)
-        history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
-                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
+        history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
+                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
                           batch_size=FLAGS.batch_size,
                           nb_epoch=FLAGS.max_epochs,
                           shuffle=True,
                           callbacks=callbacks)
 
         pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
-        FLAGS.task, model, experiment, embeddings, sent_embed)
+            FLAGS.task, model, experiment, embeddings, sent_embed)
         with open(pickle_file, 'wb') as handle:
             pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -142,8 +145,8 @@ def run(FLAGS):
                     metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
         t0 = time.time()
         callbacks = get_callbacks(filepath)
-        history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
-                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
+        history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
+                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
                           batch_size=FLAGS.batch_size,
                           nb_epoch=FLAGS.max_epochs,
                           shuffle=True,
@@ -167,15 +170,15 @@ def run(FLAGS):
         print("Starting training at", datetime.datetime.now())
         t0 = time.time()
         callbacks = get_callbacks(filepath)
-        history = net.fit([q1_train, q2_train, raw1_train, raw2_train], y_train,
-                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev], y_dev),
+        history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
+                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
                           batch_size=FLAGS.batch_size,
                           nb_epoch=FLAGS.max_epochs,
                           shuffle=True,
                           callbacks=callbacks)
 
         pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
-        FLAGS.task, model, experiment, embeddings, sent_embed)
+            FLAGS.task, model, experiment, embeddings, sent_embed)
         with open(pickle_file, 'wb') as handle:
             pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -188,9 +191,9 @@ def run(FLAGS):
     else:
         print("------------Unknown mode------------")
 
-    get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test)
+    get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
 
-    predictions = find_prediction_probability(net, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test)
+    predictions = find_prediction_probability(net, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
     write_predictions(predictions)
 
     # cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train
@@ -201,11 +204,11 @@ def run(FLAGS):
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
     if mode != "ensemble":
-        test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test,
+        test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,
                                                            filepath)
     else:
-        test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, y_test)
-        test_acc = evaluate_accuracy(net, q1_test, q2_test, raw1_test, raw2_test, y_test)
+        test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test)
+        test_acc = evaluate_accuracy(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,y_test)
     print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
 
     with open("results.txt", "a") as myfile:
@@ -231,7 +234,10 @@ def create_model(word_embedding_matrix):
     q1_sent = Input(name='q1_sent', shape=(1,), dtype="string")
     q2_sent = Input(name='q2_sent', shape=(1,), dtype="string")
 
-    model_input = [q1, q2, q1_sent, q2_sent]
+    q1_tfidf = Input(name='q1_sent', shape=(384348, 300))
+    q2_tfidf = Input(name='q2_sent', shape=(384348, 300))
+
+    model_input = [q1, q2, q1_sent, q2_sent, q1_tfidf, q2_tfidf]
 
     if model == "dec_att":
         net = dec_att.create_model(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed)
@@ -270,7 +276,8 @@ def ensemble_models(model_input, word_embedding_matrix):
     sent_embed = FLAGS.sent_embed
     experiment = FLAGS.experiment
 
-    decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (cFLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
+    decatt_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (
+        FLAGS.task, 'dec_att', experiment, embeddings, sent_embed)
     esim_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'esim', experiment, embeddings, sent_embed)
     gru_file = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, 'gru', experiment, embeddings, sent_embed)
     models = ensembling.create_ensemble(model_input, word_embedding_matrix, maxlen, embeddings, sent_embed,
@@ -288,10 +295,10 @@ def get_best(history):
     return max_val_acc, idx
 
 
-def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, filepath):
+def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,filepath):
     model.load_weights(filepath)
 
-    scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test], y_test, verbose=0, batch_size=FLAGS.batch_size)
+    scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test], y_test, verbose=0, batch_size=FLAGS.batch_size)
     loss = scores[1]
     accuracy = scores[2]
     f1_score = scores[3]
@@ -299,22 +306,22 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, f
     return loss, accuracy, f1_score
 
 
-def evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
-    pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
+def evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test):
+    pred = model.predict([q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test], batch_size=FLAGS.batch_size)
     pred = np.argmax(pred, axis=1)
     pred = np.expand_dims(pred, axis=1)  # make same shape as y_test
     error = np.sum(np.not_equal(pred, y_test)) / y_test.shape[0]
     return error
 
 
-def evaluate_accuracy(model, q1_test, q2_test, raw1_test, raw2_test, y_test):
-    y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test)
+def evaluate_accuracy(model, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test):
+    y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test)
     score = accuracy_score(y_test, y_pred)
     return score
 
 
-def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test):
-    y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test)
+def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test):
+    y_pred = get_predictions(model, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test)
 
     print("Confusion matrix:")
     print(confusion_matrix(y_test, y_pred))
@@ -324,8 +331,8 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test):
     print(classification_report(y_test, y_pred, target_names=target_names))
 
 
-def find_prediction_probability(model, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test):
-    y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
+def find_prediction_probability(model, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test):
+    y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test], batch_size=FLAGS.batch_size)
 
     question_pred = []
     for idx, i in enumerate(q1_test):
@@ -334,8 +341,8 @@ def find_prediction_probability(model, q1_test, q2_test, y_test, qid_test, raw1_
     return question_pred
 
 
-def get_predictions(model, q1_test, q2_test, raw1_test, raw2_test):
-    y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test], batch_size=FLAGS.batch_size)
+def get_predictions(model, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test):
+    y_pred = model.predict([q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test], batch_size=FLAGS.batch_size)
     y_pred = (y_pred > 0.5)
     y_pred = y_pred.flatten()
     y_pred = y_pred.astype(int)
