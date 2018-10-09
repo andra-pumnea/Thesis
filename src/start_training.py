@@ -6,6 +6,25 @@ import sys
 import datetime
 import time
 
+import numpy as np
+import tensorflow as tf
+import random as rn
+import os
+
+os.environ['PYTHONHASHSEED'] = '0'
+
+# Setting the seed for numpy-generated random numbers
+np.random.seed(37)
+
+# Setting the seed for python random numbers
+rn.seed(1254)
+
+# Setting the graph-level random seed.
+tf.set_random_seed(89)
+session_conf = tf.ConfigProto(
+    intra_op_parallelism_threads=1,
+    inter_op_parallelism_threads=1)
+
 from keras.callbacks import History, ModelCheckpoint, EarlyStopping
 from keras.layers import Dense
 from keras.optimizers import Adam
@@ -24,26 +43,8 @@ import gru as gru
 import infer_sent
 import ensembling as ensembling
 import namespace_utils as namespace_utils
-import numpy as np
-import tensorflow as tf
-import random as rn
-import os
 
 from Metrics import Metrics
-
-os.environ['PYTHONHASHSEED'] = '0'
-
-# Setting the seed for numpy-generated random numbers
-np.random.seed(37)
-
-# Setting the seed for python random numbers
-rn.seed(1254)
-
-# Setting the graph-level random seed.
-tf.set_random_seed(89)
-session_conf = tf.ConfigProto(
-    intra_op_parallelism_threads=1,
-    inter_op_parallelism_threads=1)
 
 # Force Tensorflow to use a single thread
 sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
@@ -71,7 +72,7 @@ def run(FLAGS):
     else:
         init_embeddings = 1
 
-    word_index = vocab.prepare_vocab(train_file, embeddings)
+    # word_index = vocab.prepare_vocab(train_file, embeddings)
 
     # Prepare datasets
     if init_embeddings == 1:
@@ -176,7 +177,7 @@ def run(FLAGS):
                           validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
                           batch_size=FLAGS.batch_size,
                           nb_epoch=FLAGS.max_epochs,
-                          shuffle=True,
+                          shuffle=False,
                           callbacks=callbacks)
 
         pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
@@ -214,9 +215,8 @@ def run(FLAGS):
     print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
 
     with open("results.txt", "a") as myfile:
-        myfile.write("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
-        myfile.write(
-            'Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
+        myfile.write("Finished running %s model on %s with %s and %s in %s mode" % (model, experiment, embeddings, sent_embed, mode))
+        myfile.write('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
         myfile.write('\n')
 
 
@@ -332,6 +332,9 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test, 
     target_names = ['non_duplicate', 'duplicate']
     print(classification_report(y_test, y_pred, target_names=target_names))
 
+    print("Marco F1:%f" % f1_score(y_test, y_pred, average='macro'))
+    print("Weighted F1:%f" %f1_score(y_test, y_pred, average='weighted'))
+
     test_f1 = f1_score(y_test, y_pred, average='micro')
     return test_f1
 
@@ -366,7 +369,7 @@ def write_predictions(question_pred):
 def get_callbacks(filename):
     metrics = Metrics()
     callbacks = [ModelCheckpoint(filename, monitor='val_loss', save_best_only=True, mode='min'),
-                 EarlyStopping(monitor='val_loss', patience=3), metrics]
+                 EarlyStopping(monitor='val_loss', patience=5), metrics]
     return callbacks
 
 
@@ -398,6 +401,8 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, q1_dev, q2_dev, y_dev):
         loss_scores.append(scores[1])
         i += 1
     return cvscores, loss_scores
+
+def repeat_training()
 
 
 def enrich_options(options):
