@@ -209,12 +209,12 @@ def run(FLAGS):
     else:
         test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test)
         test_acc = evaluate_accuracy(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,y_test)
-    print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {1:.4f}'.format(test_loss, test_acc * 100, test_f1))
+    print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
 
     with open("results.txt", "a") as myfile:
         myfile.write("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
         myfile.write(
-            'Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {1:.4f}'.format(test_loss, test_acc * 100, test_f1))
+            'Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
         myfile.write('\n')
 
 
@@ -250,6 +250,8 @@ def create_model(word_embedding_matrix):
     elif model == "ensemble":
         models = ensemble_models(model_input, word_embedding_matrix)
         net = ensembling.ensemble(model_input, models)
+    else:
+        print("------------Unknown moel------------")
     return net
 
 
