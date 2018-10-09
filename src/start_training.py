@@ -11,7 +11,7 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 from keras import backend as K, Input
 from keras.utils import to_categorical
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, f1_score
 from sklearn.model_selection import StratifiedKFold
 from keras.models import Model
 
@@ -193,7 +193,7 @@ def run(FLAGS):
     else:
         print("------------Unknown mode------------")
 
-    get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
+    test_f1 = get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
 
     predictions = find_prediction_probability(net, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
     write_predictions(predictions)
@@ -206,7 +206,7 @@ def run(FLAGS):
     # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
     if mode != "ensemble":
-        test_loss, test_acc, test_f1 = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,
+        test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,
                                                            filepath)
     else:
         test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test)
@@ -305,9 +305,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, q
     scores = model.evaluate([q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test], y_test, verbose=0, batch_size=FLAGS.batch_size)
     loss = scores[1]
     accuracy = scores[2]
-    f1_score = scores[3]
-    print(scores)
-    return loss, accuracy, f1_score
+    return loss, accuracy
 
 
 def evaluate_error(model, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test):
@@ -333,6 +331,9 @@ def get_confusion_matrix(model, q1_test, q2_test, y_test, raw1_test, raw2_test, 
     print("Classification report:")
     target_names = ['non_duplicate', 'duplicate']
     print(classification_report(y_test, y_pred, target_names=target_names))
+
+    test_f1 = f1_score(y_test, y_pred, average='micro')
+    return test_f1
 
 
 def find_prediction_probability(model, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test):
