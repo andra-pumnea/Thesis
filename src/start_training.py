@@ -209,12 +209,12 @@ def run(FLAGS):
     else:
         test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test)
         test_acc = evaluate_accuracy(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,y_test)
-    print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
+    print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {1:.4f}'.format(test_loss, test_acc * 100, test_f1))
 
     with open("results.txt", "a") as myfile:
         myfile.write("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
         myfile.write(
-            'Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f}'.format(test_loss, test_acc * 100))
+            'Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {1:.4f}'.format(test_loss, test_acc * 100, test_f1))
         myfile.write('\n')
 
 
@@ -302,7 +302,7 @@ def evaluate_best_model(model, q1_test, q2_test, y_test, raw1_test, raw2_test, q
     loss = scores[1]
     accuracy = scores[2]
     f1_score = scores[3]
-    # print(scores)
+    print(scores)
     return loss, accuracy, f1_score
 
 
