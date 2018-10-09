@@ -29,6 +29,8 @@ import tensorflow as tf
 import random as rn
 import os
 
+from Metrics import Metrics
+
 os.environ['PYTHONHASHSEED'] = '0'
 
 # Setting the seed for numpy-generated random numbers
@@ -361,8 +363,9 @@ def write_predictions(question_pred):
 
 
 def get_callbacks(filename):
+    metrics = Metrics()
     callbacks = [ModelCheckpoint(filename, monitor='val_loss', save_best_only=True, mode='min'),
-                 EarlyStopping(monitor='val_loss', patience=3)]
+                 EarlyStopping(monitor='val_loss', patience=3), metrics]
     return callbacks
 
 
