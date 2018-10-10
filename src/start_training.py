@@ -112,111 +112,129 @@ def run(FLAGS):
     net = create_model(word_embedding_matrix)
     net.summary()
 
-    filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
-    if mode == "ensemble":
-        print("Create ensemble of models")
-    elif mode == "fine-tuning":
-        model_file = "models/weights.best.quora.dec_att.training_full.glove.no_univ_sent.hdf5"
-        print("Loading pre-trained model from %s:" % model_file)
-        net.load_weights(model_file)
-        net = freeze_layers(net)
-        net.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy',
-                    metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
-        t0 = time.time()
-        callbacks = get_callbacks(filepath)
-        history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
-                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
-                          batch_size=FLAGS.batch_size,
-                          nb_epoch=FLAGS.max_epochs,
-                          shuffle=True,
-                          callbacks=callbacks)
+    for i in range(1,5):
+        acc_scores = []
+        f1_scores = []
+        loss_scores = []
+        filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
+        if mode == "ensemble":
+            print("Create ensemble of models")
+        elif mode == "fine-tuning":
+            model_file = "models/weights.best.quora.dec_att.training_full.glove.no_univ_sent.hdf5"
+            print("Loading pre-trained model from %s:" % model_file)
+            net.load_weights(model_file)
+            net = freeze_layers(net)
+            net.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy',
+                        metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
+            t0 = time.time()
+            callbacks = get_callbacks(filepath)
+            history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
+                              validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
+                              batch_size=FLAGS.batch_size,
+                              nb_epoch=FLAGS.max_epochs,
+                              shuffle=True,
+                              callbacks=callbacks)
 
-        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
-            FLAGS.task, model, experiment, embeddings, sent_embed)
-        with open(pickle_file, 'wb') as handle:
-            pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
+                FLAGS.task, model, experiment, embeddings, sent_embed)
+            with open(pickle_file, 'wb') as handle:
+                pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        t1 = time.time()
-        print("Training ended at", datetime.datetime.now())
-        print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
-    elif mode == "transfer_learning":
-        model_file = "models/weights.best.snli.esim.hdf5"
-        print("Loading pre-trained model from %s:" % model_file)
-        net.load_weights(model_file)
-        net = replace_layer(net)
-        net.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy',
-                    metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
-        t0 = time.time()
-        callbacks = get_callbacks(filepath)
-        history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
-                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
-                          batch_size=FLAGS.batch_size,
-                          nb_epoch=FLAGS.max_epochs,
-                          shuffle=True,
-                          callbacks=callbacks)
+            t1 = time.time()
+            print("Training ended at", datetime.datetime.now())
+            print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
+        elif mode == "transfer_learning":
+            model_file = "models/weights.best.snli.esim.hdf5"
+            print("Loading pre-trained model from %s:" % model_file)
+            net.load_weights(model_file)
+            net = replace_layer(net)
+            net.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy',
+                        metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
+            t0 = time.time()
+            callbacks = get_callbacks(filepath)
+            history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
+                              validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
+                              batch_size=FLAGS.batch_size,
+                              nb_epoch=FLAGS.max_epochs,
+                              shuffle=True,
+                              callbacks=callbacks)
 
-        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
-            FLAGS.task, model, experiment, embeddings, sent_embed)
-        with open(pickle_file, 'wb') as handle:
-            pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
+                FLAGS.task, model, experiment, embeddings, sent_embed)
+            with open(pickle_file, 'wb') as handle:
+                pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        t1 = time.time()
-        print("Training ended at", datetime.datetime.now())
-        print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
-    elif mode == "load":
-        print("Loading weights from %s" % filepath)
-        net.load_weights(filepath)
-        net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
-                    metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
-    elif mode == "training":
-        # Start training
-        print("Starting training at", datetime.datetime.now())
-        t0 = time.time()
-        callbacks = get_callbacks(filepath)
-        history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
-                          validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
-                          batch_size=FLAGS.batch_size,
-                          nb_epoch=FLAGS.max_epochs,
-                          shuffle=False,
-                          callbacks=callbacks)
+            t1 = time.time()
+            print("Training ended at", datetime.datetime.now())
+            print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
+        elif mode == "load":
+            print("Loading weights from %s" % filepath)
+            net.load_weights(filepath)
+            net.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+                        metrics=['binary_crossentropy', 'accuracy', model_utils.f1])
+        elif mode == "training":
+            # Start training
+            print("Starting training at", datetime.datetime.now())
+            t0 = time.time()
+            callbacks = get_callbacks(filepath)
+            history = net.fit([q1_train, q2_train, raw1_train, raw2_train,q1_tfidf_train, q2_tfidf_train], y_train,
+                              validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
+                              batch_size=FLAGS.batch_size,
+                              nb_epoch=FLAGS.max_epochs,
+                              shuffle=False,
+                              callbacks=callbacks)
 
-        pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
-            FLAGS.task, model, experiment, embeddings, sent_embed)
-        with open(pickle_file, 'wb') as handle:
-            pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
+                FLAGS.task, model, experiment, embeddings, sent_embed)
+            with open(pickle_file, 'wb') as handle:
+                pickle.dump(history.history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        t1 = time.time()
-        print("Training ended at", datetime.datetime.now())
-        print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
+            t1 = time.time()
+            print("Training ended at", datetime.datetime.now())
+            print("Minutes elapsed: %f" % ((t1 - t0) / 60.))
 
-        max_val_acc, idx = get_best(history)
-        print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
-    else:
-        print("------------Unknown mode------------")
+            max_val_acc, idx = get_best(history)
+            print('Maximum accuracy at epoch', '{:d}'.format(idx + 1), '=', '{:.4f}'.format(max_val_acc))
+        else:
+            print("------------Unknown mode------------")
 
-    test_f1 = get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
+        test_f1 = get_confusion_matrix(net, q1_test, q2_test, y_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
 
-    predictions = find_prediction_probability(net, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
-    write_predictions(predictions)
+        predictions = find_prediction_probability(net, q1_test, q2_test, y_test, qid_test, raw1_test, raw2_test,q1_tfidf_test, q2_tfidf_test)
+        write_predictions(predictions)
 
-    # cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train
-    #                                        q1_test, q2_test, y_test)
-    print("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
-    # print_crossval(cvscores)
-    # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
-    # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
+        # cvscores, loss_scores = evaluate_model(word_embedding_matrix, q1_train, q2_train, y_train
+        #                                        q1_test, q2_test, y_test)
+        print("Finished running %s model on %s with %s and %s" % (model, experiment, embeddings, sent_embed))
+        # print_crossval(cvscores)
+        # print("Crossvalidation accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
+        # print("Crossvalidation lostt result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
-    if mode != "ensemble":
-        test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,
-                                                           filepath)
-    else:
-        test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test)
-        test_acc = evaluate_accuracy(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,y_test)
-    print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
+        if mode != "ensemble":
+            test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,
+                                                               filepath)
+            acc_scores.appned(test_acc*100)
+            f1_scores.append(test_f1*100)
+            loss_scores.append(test_loss)
+        else:
+            test_loss = evaluate_error(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test, y_test)
+            test_acc = evaluate_accuracy(net, q1_test, q2_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,y_test)
+        print('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
+
+        with open("results.txt", "a") as myfile:
+            myfile.write("Finished running %s model on %s with %s and %s in %s mode" % (model, experiment, embeddings, sent_embed, mode))
+            myfile.write('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
+            myfile.write('\n')
+
+        i += 1
+    print("Average accuracy result: %.2f%% (+/- %.2f%%)" % (np.mean(acc_scores), np.std(acc_scores)))
+    print("Average F1 result: %.2f (+/- %.2f)" % (np.mean(f1_scores), np.std(f1_scores)))
+    print("Average loss result: %.2f (+/- %.2f)" % (np.mean(loss_scores), np.std(loss_scores)))
 
     with open("results.txt", "a") as myfile:
-        myfile.write("Finished running %s model on %s with %s and %s in %s mode" % (model, experiment, embeddings, sent_embed, mode))
-        myfile.write('Evaluation without crossval: loss = {0:.4f}, accuracy = {1:.4f} F1-score = {2:.4f}'.format(test_loss, test_acc * 100, test_f1*100))
+        myfile.write("Average accuracy result: %.2f%% (+/- %.2f%%) \n" % (np.mean(acc_scores), np.std(acc_scores)))
+        myfile.write("Average F1 result: %.2f (+/- %.2f) \n" % (np.mean(f1_scores), np.std(f1_scores)))
+        myfile.write("Average loss result: %.2f (+/- %.2f)\n" % (np.mean(loss_scores), np.std(loss_scores)))
         myfile.write('\n')
 
 
@@ -401,9 +419,6 @@ def evaluate_model(word_embedding_matrix, q1, q2, y, q1_dev, q2_dev, y_dev):
         loss_scores.append(scores[1])
         i += 1
     return cvscores, loss_scores
-
-def repeat_training()
-
 
 def enrich_options(options):
     key = "in_format"
