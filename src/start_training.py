@@ -112,10 +112,10 @@ def run(FLAGS):
     net = create_model(word_embedding_matrix)
     net.summary()
 
+    acc_scores = []
+    f1_scores = []
+    loss_scores = []
     for i in range(1,5):
-        acc_scores = []
-        f1_scores = []
-        loss_scores = []
         filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
         if mode == "ensemble":
             print("Create ensemble of models")
@@ -213,7 +213,7 @@ def run(FLAGS):
         if mode != "ensemble":
             test_loss, test_acc = evaluate_best_model(net, q1_test, q2_test, y_test, raw1_test, raw2_test, q1_tfidf_test, q2_tfidf_test,
                                                                filepath)
-            acc_scores.appned(test_acc*100)
+            acc_scores.append(test_acc*100)
             f1_scores.append(test_f1*100)
             loss_scores.append(test_loss)
         else:
