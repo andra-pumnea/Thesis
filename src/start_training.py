@@ -72,7 +72,7 @@ def run(FLAGS):
     else:
         init_embeddings = 1
 
-    # word_index = vocab.prepare_vocab(train_file, embeddings)
+    word_index = vocab.prepare_vocab(train_file, embeddings)
 
     # Prepare datasets
     if init_embeddings == 1:
@@ -109,13 +109,14 @@ def run(FLAGS):
         y_dev = to_categorical(y_dev, num_classes=None)
         y_test = to_categorical(y_test, num_classes=None)
 
-    net = create_model(word_embedding_matrix)
-    net.summary()
+    #net = create_model(word_embedding_matrix)
+    #net.summary()
 
     acc_scores = []
     f1_scores = []
     loss_scores = []
-    for i in range(1,5):
+    for i in range(0,5):
+        net = create_model(word_embedding_matrix)
         filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
         if mode == "ensemble":
             print("Create ensemble of models")
@@ -181,7 +182,7 @@ def run(FLAGS):
                               validation_data=([q1_dev, q2_dev, raw1_dev, raw2_dev,q1_tfidf_dev, q2_tfidf_dev], y_dev),
                               batch_size=FLAGS.batch_size,
                               nb_epoch=FLAGS.max_epochs,
-                              shuffle=False,
+                              shuffle=True,
                               callbacks=callbacks)
 
             pickle_file = "saved_history/history.%s.%s.%s.%s.%s.pickle" % (
