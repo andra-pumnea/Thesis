@@ -111,7 +111,6 @@ def run(FLAGS):
     net = create_model(word_embedding_matrix)
     net.summary()
 
-
     filepath = "models/weights.best.%s.%s.%s.%s.%s.hdf5" % (FLAGS.task, model, experiment, embeddings, sent_embed)
     if mode == "ensemble":
         print("Create ensemble of models")
