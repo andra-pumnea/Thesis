@@ -6,6 +6,8 @@ from keras.preprocessing.sequence import pad_sequences
 from keras import backend as K
 import csv
 import pickle
+
+from keras_preprocessing.text import Tokenizer
 from nltk.corpus import stopwords
 import nltk
 import re
@@ -131,7 +133,7 @@ def get_embeddings(embeddings):
 
 # Prepare word embedding matrix
 def get_embedding_matrix(embeddings_index, word_index, max_nb_words):
-    nb_words = min(max_nb_words, len(word_index))
+    nb_words = max_nb_words
     word_embedding_matrix = np.zeros((nb_words + 1, EMBEDDING_DIM))
     for word, i in word_index.items():
         if i > max_nb_words:
@@ -171,7 +173,7 @@ def pad_sentences(question1_word_sequences, question2_word_sequences, is_duplica
     return q1_data, q2_data, labels
 
 
-def init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight, weight='no_tf_idf'):
+def init_embeddings(w_index, max_nb_words, task, experiment, embeddings):
     cache_filename = "embedding_matrix/%s.%s.%s.min.cache.npy" % (task, experiment, embeddings)
     # cache_filename = "embedding_matrix/snli.min.cache.npy"
 
@@ -181,10 +183,7 @@ def init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2we
     else:
         # Prepare embedding matrix to be used in Embedding Layer
         embeddings_index = get_embeddings(embeddings)
-        if weight != 'tf_idf':
-            word_embedding_matrix = get_embedding_matrix(embeddings_index, w_index, max_nb_words)
-        else:
-            word_embedding_matrix = get_tfidf_embedding_matrix(embeddings_index, w_index, max_nb_words, word2weight)
+        word_embedding_matrix = get_embedding_matrix(embeddings_index, w_index, max_nb_words)
         np.save(cache_filename, word_embedding_matrix)
     return word_embedding_matrix
 
@@ -242,17 +241,13 @@ def prepare_dataset(filename, maxlen, max_nb_words, experiment, task, embeddings
     Q1 = X[:, 0]
     Q2 = X[:, 1]
     q1_raw, q2_raw = prepare_sentence_enc(question1, question2)
-    q1_tfidf, q2_tfidf = tfidf_sentence_enc(question1, question2)
 
 
     if train == 1:
-        qs = question1 + question2
-        word2weight = weight_embeddings.tfidf_fit(qs)
-        word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings, word2weight)
-        sif_sentence_enc(question1, question2, word_embedding_matrix, max_nb_words)
-        return Q1, Q2, y, qid, q1_raw, q2_raw, q1_tfidf, q2_tfidf, word_embedding_matrix
+        word_embedding_matrix = init_embeddings(w_index, max_nb_words, task, experiment, embeddings)
+        return Q1, Q2, y, qid, q1_raw, q2_raw, word_embedding_matrix
     else:
-        return Q1, Q2, y, qid, q1_raw, q2_raw, q1_tfidf, q2_tfidf
+        return Q1, Q2, y, qid, q1_raw, q2_raw
 
 
 def sif_sentence_enc(question1, question2, embedding_size=300):
@@ -270,21 +265,37 @@ def sif_sentence_enc(question1, question2, embedding_size=300):
     print(q2_sent.shape)
 
 
+def get_existing_embedding_matrix(task='quora', experiment='training_full', embeddings='glove'):
+    cache_filename = "embedding_matrix/%s.%s.%s.min.cache.npy" % (task, experiment, embeddings)
+    # cache_filename = "embedding_matrix/snli.min.cache.npy"
+
+    if exists(cache_filename):
+        word_embedding_matrix = np.load(cache_filename)
+        word_embedding_matrix = word_embedding_matrix[0]
+
+    return word_embedding_matrix
+
+
 #when generating the encoding, the embedding_matrix is needed
 def tfidf_sentence_enc(question1, question2):
+    embed_matrix = get_existing_embedding_matrix()
     qs = question1 + question2
-    # matrix = weight_embeddings.tfidf_fit_transform(qs, embed_matrix)
-    # print(matrix.shape)
+
+    matrix = weight_embeddings.tfidf_fit_transform(qs, embed_matrix)
+    print(matrix.shape)
     # with open('tfidf_sentences.pickle', 'wb') as handle:
     #     pickle.dump(matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open('ttfidf_sentences.pickle', 'rb') as handle:
-        matrix = pickle.load(handle)
+    # with open('tfidf_sentences.pickle', 'rb') as handle:
+    #     matrix = pickle.load(handle)
 
     q1_sent = matrix[:len(question1)]
     q2_sent = matrix[:len(question2)]
+    q1_sent = np.array(q1_sent, dtype='object')[:, np.newaxis]
+    q2_sent = np.array(q2_sent, dtype='object')[:, np.newaxis]
     print(q1_sent.shape)
     print(q2_sent.shape)
+
     return q1_sent, q2_sent
 
 

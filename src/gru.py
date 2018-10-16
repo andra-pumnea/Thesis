@@ -39,13 +39,6 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
     distance_sent = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
 
-    lstm = LSTM(100)
-
-    lstm_out_q1 = lstm(model_input[4])
-    lstm_out_q2 = lstm(model_input[5])
-    distance2 = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
-        [lstm_out_q1, lstm_out_q2])
-
     # Since this is a siamese network, both sides share the same GRU
     shared_layer = GRU(n_hidden, kernel_initializer='glorot_uniform',
                        bias_initializer='zeros', kernel_regularizer=regularizers.l2(0.0001))
@@ -61,8 +54,6 @@ def create_model(model_input, word_embedding_matrix, maxlen=30, embeddings='glov
 
     if sent_embed == 'univ_sent':
         merged = concatenate([output_q1, output_q2, squared_diff, mult, distance_sent])
-    elif sent_embed == 'tfidf':
-        merged = concatenate([output_q1, output_q2, squared_diff, mult, distance2])
     else:
         merged = concatenate([output_q1, output_q2, squared_diff, mult])
 

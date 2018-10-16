@@ -32,13 +32,6 @@ def create_model(model_input, pretrained_embedding, maxlen=30, embeddings='glove
     distance1 = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
         [sent1_dense, sent2_dense])
 
-    lstm = LSTM(100)
-
-    lstm_out_q1 = lstm(model_input[4])
-    lstm_out_q2 = lstm(model_input[5])
-    distance2 = Lambda(preprocessing.cosine_distance, output_shape=preprocessing.get_shape)(
-        [lstm_out_q1, lstm_out_q2])
-
     # q1_embed = GaussianNoise(0.01)(q1_embed)
     # q2_embed = GaussianNoise(0.01)(q2_embed)
 
@@ -78,8 +71,6 @@ def create_model(model_input, pretrained_embedding, maxlen=30, embeddings='glove
     # Classifier
     if sent_embed == 'univ_sent':
         merged = Concatenate()([q1_rep, q2_rep, distance1])
-    elif sent_embed == 'tfidf':
-        merged = Concatenate()([q1_rep, q2_rep, distance2])
     else:
         merged = Concatenate()([q1_rep, q2_rep])
     dense = BatchNormalization()(merged)
