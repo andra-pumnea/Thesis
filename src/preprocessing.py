@@ -12,6 +12,7 @@ from nltk.corpus import stopwords
 import nltk
 import re
 import weight_embeddings
+from gensim.models import FastText as fText
 
 KERAS_DATASETS_DIR = expanduser('~/.keras/datasets/')
 GLOVE_FILE = 'glove.840B.300d.txt'
@@ -147,6 +148,22 @@ def get_embedding_matrix(embeddings_index, word_index, max_nb_words):
 
 
 # Prepare word embedding matrix
+def get_fasttext_embedding_matrix(word_index, max_nb_words):
+    model = fText.load_fasttext_format(FASTTEXT_FILE)
+    nb_words = max_nb_words
+    word_embedding_matrix = np.zeros((nb_words + 1, EMBEDDING_DIM))
+    for word, i in word_index.items():
+        if i > max_nb_words:
+            continue
+        embedding_vector = model.wv[word]
+        if embedding_vector is not None:
+            word_embedding_matrix[i] = embedding_vector
+
+    print('Null word embeddings: %d' % np.sum(np.sum(word_embedding_matrix, axis=1) == 0))
+    return word_embedding_matrix, nb_words
+
+
+# Prepare word embedding matrix
 def get_tfidf_embedding_matrix(embeddings_index, word_index, max_nb_words, word2weight):
     nb_words = min(max_nb_words, len(word_index))
     word_embedding_matrix = np.zeros((nb_words + 1, EMBEDDING_DIM))
@@ -182,8 +199,11 @@ def init_embeddings(w_index, max_nb_words, task, experiment, embeddings):
         word_embedding_matrix = word_embedding_matrix[0]
     else:
         # Prepare embedding matrix to be used in Embedding Layer
-        embeddings_index = get_embeddings(embeddings)
-        word_embedding_matrix = get_embedding_matrix(embeddings_index, w_index, max_nb_words)
+        if embeddings == 'glove':
+            embeddings_index = get_embeddings(embeddings)
+            word_embedding_matrix = get_embedding_matrix(embeddings_index, w_index, max_nb_words)
+        else:
+            word_embedding_matrix = get_fasttext_embedding_matrix(w_index, max_nb_words)
         np.save(cache_filename, word_embedding_matrix)
     return word_embedding_matrix
 
